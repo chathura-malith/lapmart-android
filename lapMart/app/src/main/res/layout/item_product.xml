@@ -1,0 +1,69 @@
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardBackgroundColor="#F8F6F8"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/productName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/poppins"
+            android:gravity="center"
+            android:lines="2"
+            android:maxLines="2"
+            android:minLines="2"
+            android:text="MSI Cyborg Gaming 15 AI A1VEK – Ultra 7"
+            android:textColor="#1667BA"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/productImage"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginVertical="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/msi_laptop" />
+
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/productPrice"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/poppins"
+                        android:text="Rs.440000.00"
+                        android:textColor="@color/md_theme_secondary"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/addToCartBtn"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/shopping_cart_24"
+                        android:padding="2dp"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        app:tint="#000000" />
+                </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
