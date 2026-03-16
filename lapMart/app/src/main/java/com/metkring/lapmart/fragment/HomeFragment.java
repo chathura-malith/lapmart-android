@@ -1,5 +1,6 @@
 package com.metkring.lapmart.fragment;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,9 +11,14 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -21,13 +27,22 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.firestore.Query;
 import com.metkring.lapmart.R;
 import com.metkring.lapmart.adapter.BrandAdapter;
 import com.metkring.lapmart.adapter.ProductAdapter;
 import com.metkring.lapmart.databinding.FragmentHomeBinding;
+import com.metkring.lapmart.model.Brand;
 import com.metkring.lapmart.model.Product;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+
+import android.util.Log;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -35,9 +50,9 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
     private FragmentHomeBinding binding;
     private BrandAdapter brandAdapter;
-    private List<String> brands;
+    private ProductAdapter adapter;
+    private List<Product> productList;
     private GoogleMap mMap;
-
 
 
     @Override
@@ -58,27 +73,172 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        brands = new ArrayList<>();
+        productList = new ArrayList<>();
+//        uploadBrandsToFirestore();
+//        uploadDummyProductsToFirestore();
         loadBrand(view);
 
         call();
         loadMap(view);
-        loadProduct(view);
+        loadProduct(view, "All");
+
+        binding.searchBtn.setOnClickListener(v -> {
+            String searchText = binding.searchEditText.getText().toString().trim();
+            hideKeyboard();
+            if (!searchText.isEmpty()) {
+                searchInDatabase(searchText);
+            } else {
+                loadProduct(view, "All");
+            }
+        });
+
+        binding.searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (s.toString().trim().isEmpty()) {
+                    hideKeyboard();
+                    loadProduct(getView(), "All");
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
     }
 
+    private void searchInDatabase(String searchText) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        String formattedSearch = searchText.substring(0, 1).toUpperCase() + searchText.substring(1);
+
+        db.collection("products")
+                .orderBy("model")
+                .startAt(formattedSearch)
+                .endAt(formattedSearch + "\uf8ff")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    productList.clear();
+                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        Product product = document.toObject(Product.class);
+                        if (product != null) productList.add(product);
+                    }
+                    if (adapter != null) {
+                        adapter.notifyDataSetChanged();
+                        if (productList.isEmpty()) {
+                            binding.productRecyclerView.setVisibility(View.GONE);
+                            binding.emptyStateLayout.setVisibility(View.VISIBLE);
+                        } else {
+                            binding.productRecyclerView.setVisibility(View.VISIBLE);
+                            binding.emptyStateLayout.setVisibility(View.GONE);
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Search Error: " + e.getMessage());
+                });
+    }
+
+
+    private void uploadBrandsToFirestore() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        // ඔයාට අවශ්‍ය බ්‍රෑන්ඩ්ස් ලිස්ට් එක මෙතැනට දාන්න
+        String[] brandsArray = {"Apple", "MSI", "Asus", "HP", "Dell", "Lenovo", "Acer", "Gigabyte"};
+
+        for (String brandName : brandsArray) {
+            // අපි කලින් හදපු Brand model එක පාවිච්චි කරනවා
+            Brand brand = new Brand(brandName);
+
+            // 'brands' collection එකට දත්ත ඇතුළත් කිරීම
+            db.collection("brands")
+                    .add(brand)
+                    .addOnSuccessListener(documentReference -> {
+                        Log.d("Firestore", brandName + " සාර්ථකව ඇතුළත් කළා!");
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("Firestore", brandName + " ඇතුළත් කිරීමේදී දෝෂයක්: " + e.getMessage());
+                    });
+        }
+    }
+
+    private void uploadDummyProductsToFirestore() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        List<Product> dummyProducts = new ArrayList<>();
+
+        dummyProducts.add(new Product(
+                "HP",
+                "- AMD Ryzen 7 7840HS - 1TB SSD - 16GB DDR5 RAM - RTX 4050 6GB",
+                "6GB NVIDIA RTX 4050",
+                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2025/11/HP-Victus-15-Gaming-i5.jpg"),
+                "HP Victus 15 2024",
+                325000.0,
+                "Ryzen 7",
+                10,
+                "16GB DDR5",
+                "1TB NVMe SSD"
+        ));
+
+        // 3. Dell Laptop
+        dummyProducts.add(new Product(
+                "Dell",
+                "- Intel Core i7 13th Gen - 512GB SSD - 16GB RAM - 15.6 FHD Display",
+                "Intel Iris Xe Graphics",
+                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2024/12/Dell-Inspiron-3520-%E2%80%93-i5-1.jpg"),
+                "Dell Inspiron 15 3520",
+                245000.0,
+                "i7",
+                5,
+                "16GB DDR4",
+                "512GB NVMe SSD"
+        ));
+
+        // Firestore එකට ඇතුළත් කිරීම
+        for (Product product : dummyProducts) {
+            db.collection("products")
+                    .add(product)
+                    .addOnSuccessListener(documentReference -> Log.d("Firestore", product.getModel() + " added!"))
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error: " + e.getMessage()));
+        }
+    }
+
+
     private void loadBrand(View view) {
-        brands.add("All");
-        brands.add("Dell");
-        brands.add("Hp");
-        brands.add("Acer");
-        brands.add("Lenovo");
+        List<Brand> brandsList = new ArrayList<>();
 
         LinearLayoutManager layoutManager = new LinearLayoutManager(view.getContext());
         layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         binding.brandRecyclerView.setLayoutManager(layoutManager);
-        brandAdapter = new BrandAdapter(brands);
+
+
+        brandAdapter = new BrandAdapter(brandsList, brandName -> {
+            loadProduct(view, brandName);
+        });
         binding.brandRecyclerView.setAdapter(brandAdapter);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("brands")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    if (!queryDocumentSnapshots.isEmpty()) {
+                        brandsList.clear();
+                        brandsList.add(new Brand("All"));
+
+                        for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                            Brand brand = document.toObject(Brand.class);
+                            if (brand != null) {
+                                brandsList.add(brand);
+                            }
+                        }
+                        brandAdapter.notifyDataSetChanged();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Brands Error: " + e.getMessage());
+                });
     }
 
     private void loadMap(View view) {
@@ -101,21 +261,43 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
-    private void loadProduct(View view) {
-        // RecyclerView එක හඳුනා ගැනීම
+    private void loadProduct(View view, String brandName) {
         RecyclerView productRv = binding.productRecyclerView;
-
-        List<Product> productList = new ArrayList<>();
-        productList.add(new Product("MSI Cyborg Gaming 15 AI A1VEK", 440000.0, R.drawable.msi_laptop));
-        productList.add(new Product("Asus Vivobook S 15 S5507", 459500.0, R.drawable.msi_laptop));
-        productList.add(new Product("MSI Cyborg Gaming 15 AI A1VEK", 440000.0, R.drawable.msi_laptop));
-        productList.add(new Product("Asus Vivobook S 15 S5507", 459500.0, R.drawable.msi_laptop));
-
         productRv.setLayoutManager(new GridLayoutManager(view.getContext(), 2));
 
-        ProductAdapter adapter = new ProductAdapter(productList);
+        adapter = new ProductAdapter(productList);
         productRv.setAdapter(adapter);
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        Query query;
+
+        if (brandName.equals("All")) {
+            query = db.collection("products");
+        } else {
+            // Firestore 'whereEqualTo' පාවිච්චි කරලා filter කරනවා
+            query = db.collection("products").whereEqualTo("brand", brandName);
+        }
+
+        query.get().addOnSuccessListener(queryDocumentSnapshots -> {
+                    productList.clear();
+                    for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
+                        Product product = document.toObject(Product.class);
+                        if (product != null) productList.add(product);
+                    }
+                    adapter.notifyDataSetChanged();
+                    if (productList.isEmpty()) {
+                        binding.productRecyclerView.setVisibility(View.GONE);
+                        binding.emptyStateLayout.setVisibility(View.VISIBLE);
+                    } else {
+                        binding.productRecyclerView.setVisibility(View.VISIBLE);
+                        binding.emptyStateLayout.setVisibility(View.GONE);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreError", "Error getting documents: " + e.getMessage());
+                });
     }
+
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
@@ -127,4 +309,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
     }
+
+    private void hideKeyboard() {
+        View view = this.getActivity().getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
 }

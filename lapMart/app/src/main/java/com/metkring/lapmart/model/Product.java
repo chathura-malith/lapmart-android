@@ -1,17 +1,118 @@
 package com.metkring.lapmart.model;
 
-public class Product {
-    private String name;
-    private double price;
-    private int imageRes; // දැනට drawable එකේ තියෙන පින්තූරයක් පාවිච්චි කරමු
+import java.io.Serializable;
+import java.util.List;
 
-    public Product(String name, double price, int imageRes) {
-        this.name = name;
-        this.price = price;
-        this.imageRes = imageRes;
+public class Product implements Serializable {
+    // Firestore වල ඇති field names වලටම සමාන විය යුතුය
+    private String brand;
+    private String description;
+    private String gpu;
+    private List<String> imageUrls;
+    private String model;
+    private double price;
+    private String processor;
+    private int qty;
+    private String ram;
+    private String storage;
+
+    public Product() {
     }
 
-    public String getName() { return name; }
-    public String getFormattedPrice() { return "Rs." + String.format("%.2f", price); }
-    public int getImageRes() { return imageRes; }
+    public Product(
+            String brand, String description, String gpu, List<String> imageUrls,
+            String model, double price, String processor, int qty, String ram, String storage
+    ) {
+        this.brand = brand;
+        this.description = description;
+        this.gpu = gpu;
+        this.imageUrls = imageUrls;
+        this.model = model;
+        this.price = price;
+        this.processor = processor;
+        this.qty = qty;
+        this.ram = ram;
+        this.storage = storage;
+    }
+
+    // 3. Getters සහ Setters (Encapsulation සඳහා)
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getGpu() {
+        return gpu;
+    }
+
+    public void setGpu(String gpu) {
+        this.gpu = gpu;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public String getProcessor() {
+        return processor;
+    }
+
+    public void setProcessor(String processor) {
+        this.processor = processor;
+    }
+
+    public int getQty() {
+        return qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = qty;
+    }
+
+    public String getRam() {
+        return ram;
+    }
+
+    public void setRam(String ram) {
+        this.ram = ram;
+    }
+
+    public String getStorage() {
+        return storage;
+    }
+
+    public void setStorage(String storage) {
+        this.storage = storage;
+    }
 }
