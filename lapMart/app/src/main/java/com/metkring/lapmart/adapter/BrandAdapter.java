@@ -9,16 +9,20 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.metkring.lapmart.R;
+import com.metkring.lapmart.model.Brand;
 
 import java.util.List;
 
 public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.ViewHolder>{
 
-    private List<String> brands;
+    private List<Brand> brands;
     private int selectedPosition = 0;
 
-    public BrandAdapter(List<String> brandList) {
+    private OnBrandClickListener listener;
+
+    public BrandAdapter(List<Brand> brandList, OnBrandClickListener listener) {
         this.brands = brandList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -31,13 +35,13 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.ViewHolder>{
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String brand = brands.get(position);
-        holder.brandName.setText(brand);
+        Brand brand = brands.get(position);
+        holder.brandName.setText(brand.getName());
 
-        // සිලෙක්ට් වී ඇත්නම් Indicator එක පෙන්වන්න, නැත්නම් හංගන්න
+
         if (selectedPosition == position) {
             holder.brandIndicator.setVisibility(View.VISIBLE);
-            holder.brandName.setSelected(true); // අකුරු වල පාට වෙනස් වීමට
+            holder.brandName.setSelected(true);
         } else {
             holder.brandIndicator.setVisibility(View.INVISIBLE);
             holder.brandName.setSelected(false);
@@ -48,6 +52,8 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.ViewHolder>{
             selectedPosition = holder.getAdapterPosition();
             notifyItemChanged(previous);
             notifyItemChanged(selectedPosition);
+
+            listener.onBrandClick(brands.get(selectedPosition).getName());
         });
     }
 
@@ -66,5 +72,9 @@ public class BrandAdapter extends RecyclerView.Adapter<BrandAdapter.ViewHolder>{
             brandName = itemView.findViewById(R.id.brandName);
             brandIndicator = itemView.findViewById(R.id.brandIndicator);
         }
+    }
+
+    public interface OnBrandClickListener {
+        void onBrandClick(String brandName);
     }
 }

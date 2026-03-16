@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.metkring.lapmart.R;
 import com.metkring.lapmart.model.Product;
 
@@ -21,6 +22,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         this.productList = productList;
     }
 
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -31,9 +33,15 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Product product = productList.get(position);
-        holder.name.setText(product.getName());
-        holder.price.setText(product.getFormattedPrice());
-        holder.image.setImageResource(product.getImageRes());
+        holder.name.setText(product.getModel());
+        holder.price.setText("Rs." + String.format("%.2f", product.getPrice()));
+        if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
+            Glide.with(holder.itemView.getContext())
+                    .load(product.getImageUrls().get(0))
+                    .placeholder(R.drawable.msi_laptop)
+                    .error(R.drawable.msi_laptop)
+                    .into(holder.image);
+        }
     }
 
     @Override
