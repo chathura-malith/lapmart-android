@@ -56,14 +56,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-
-        }
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
@@ -146,14 +138,11 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private void uploadBrandsToFirestore() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        // ඔයාට අවශ්‍ය බ්‍රෑන්ඩ්ස් ලිස්ට් එක මෙතැනට දාන්න
         String[] brandsArray = {"Apple", "MSI", "Asus", "HP", "Dell", "Lenovo", "Acer", "Gigabyte"};
 
         for (String brandName : brandsArray) {
-            // අපි කලින් හදපු Brand model එක පාවිච්චි කරනවා
             Brand brand = new Brand(brandName);
 
-            // 'brands' collection එකට දත්ත ඇතුළත් කිරීම
             db.collection("brands")
                     .add(brand)
                     .addOnSuccessListener(documentReference -> {
@@ -165,45 +154,45 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
     }
 
-    private void uploadDummyProductsToFirestore() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        List<Product> dummyProducts = new ArrayList<>();
-
-        dummyProducts.add(new Product(
-                "HP",
-                "- AMD Ryzen 7 7840HS - 1TB SSD - 16GB DDR5 RAM - RTX 4050 6GB",
-                "6GB NVIDIA RTX 4050",
-                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2025/11/HP-Victus-15-Gaming-i5.jpg"),
-                "HP Victus 15 2024",
-                325000.0,
-                "Ryzen 7",
-                10,
-                "16GB DDR5",
-                "1TB NVMe SSD"
-        ));
-
-        // 3. Dell Laptop
-        dummyProducts.add(new Product(
-                "Dell",
-                "- Intel Core i7 13th Gen - 512GB SSD - 16GB RAM - 15.6 FHD Display",
-                "Intel Iris Xe Graphics",
-                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2024/12/Dell-Inspiron-3520-%E2%80%93-i5-1.jpg"),
-                "Dell Inspiron 15 3520",
-                245000.0,
-                "i7",
-                5,
-                "16GB DDR4",
-                "512GB NVMe SSD"
-        ));
-
-        // Firestore එකට ඇතුළත් කිරීම
-        for (Product product : dummyProducts) {
-            db.collection("products")
-                    .add(product)
-                    .addOnSuccessListener(documentReference -> Log.d("Firestore", product.getModel() + " added!"))
-                    .addOnFailureListener(e -> Log.e("Firestore", "Error: " + e.getMessage()));
-        }
-    }
+//    private void uploadDummyProductsToFirestore() {
+//        FirebaseFirestore db = FirebaseFirestore.getInstance();
+//        List<Product> dummyProducts = new ArrayList<>();
+//
+//        dummyProducts.add(new Product(
+//                "HP",
+//                "- AMD Ryzen 7 7840HS - 1TB SSD - 16GB DDR5 RAM - RTX 4050 6GB",
+//                "6GB NVIDIA RTX 4050",
+//                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2025/11/HP-Victus-15-Gaming-i5.jpg"),
+//                "HP Victus 15 2024",
+//                325000.0,
+//                "Ryzen 7",
+//                10,
+//                "16GB DDR5",
+//                "1TB NVMe SSD"
+//        ));
+//
+//        // 3. Dell Laptop
+//        dummyProducts.add(new Product(
+//                "Dell",
+//                "- Intel Core i7 13th Gen - 512GB SSD - 16GB RAM - 15.6 FHD Display",
+//                "Intel Iris Xe Graphics",
+//                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2024/12/Dell-Inspiron-3520-%E2%80%93-i5-1.jpg"),
+//                "Dell Inspiron 15 3520",
+//                245000.0,
+//                "i7",
+//                5,
+//                "16GB DDR4",
+//                "512GB NVMe SSD"
+//        ));
+//
+//        // Firestore එකට ඇතුළත් කිරීම
+//        for (Product product : dummyProducts) {
+//            db.collection("products")
+//                    .add(product)
+//                    .addOnSuccessListener(documentReference -> Log.d("Firestore", product.getModel() + " added!"))
+//                    .addOnFailureListener(e -> Log.e("Firestore", "Error: " + e.getMessage()));
+//        }
+//    }
 
 
     private void loadBrand(View view) {
@@ -274,15 +263,19 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         if (brandName.equals("All")) {
             query = db.collection("products");
         } else {
-            // Firestore 'whereEqualTo' පාවිච්චි කරලා filter කරනවා
             query = db.collection("products").whereEqualTo("brand", brandName);
         }
 
         query.get().addOnSuccessListener(queryDocumentSnapshots -> {
+                    binding.homeProgressBar.setVisibility(View.GONE);
                     productList.clear();
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                         Product product = document.toObject(Product.class);
-                        if (product != null) productList.add(product);
+
+                        if (product != null){
+                            product.setId(document.getId());
+                            productList.add(product);
+                        }
                     }
                     adapter.notifyDataSetChanged();
                     if (productList.isEmpty()) {
@@ -294,6 +287,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    binding.homeProgressBar.setVisibility(View.GONE);
                     Log.e("FirestoreError", "Error getting documents: " + e.getMessage());
                 });
     }
@@ -302,8 +296,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         mMap = googleMap;
-        LatLng nikaweratiya = new LatLng(7.7494, 80.1174);
 
+        LatLng nikaweratiya = new LatLng(7.7494, 80.1174);
         mMap.addMarker(new MarkerOptions().position(nikaweratiya).title("LapMart - Nikaweratiya Branch"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nikaweratiya, 15f));
 
@@ -315,6 +309,17 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         if (view != null) {
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getActivity() != null) {
+            View bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.VISIBLE);
+            }
         }
     }
 

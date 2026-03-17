@@ -143,4 +143,6 @@
 
 
     <color name="white">#FFFFFF</color>
+    <color name="sea_blue">#73A4D6</color>
+    <color name="deep_blue">#1667BA</color>
 </resources>

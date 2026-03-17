@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 public class Product implements Serializable {
-    // Firestore වල ඇති field names වලටම සමාන විය යුතුය
+    private String id;
     private String brand;
     private String description;
     private String gpu;
@@ -20,9 +20,10 @@ public class Product implements Serializable {
     }
 
     public Product(
-            String brand, String description, String gpu, List<String> imageUrls,
+          String id,String brand, String description, String gpu, List<String> imageUrls,
             String model, double price, String processor, int qty, String ram, String storage
     ) {
+        this.id = id;
         this.brand = brand;
         this.description = description;
         this.gpu = gpu;
@@ -34,8 +35,13 @@ public class Product implements Serializable {
         this.ram = ram;
         this.storage = storage;
     }
+    public String getId() {
+        return id;
+    }
 
-    // 3. Getters සහ Setters (Encapsulation සඳහා)
+    public void setId(String id) {
+        this.id = id;
+    }
     public String getBrand() {
         return brand;
     }

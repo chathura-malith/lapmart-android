@@ -1,5 +1,6 @@
 [versions]
 agp = "8.12.3"
+dotsindicator = "5.1.0"
 firebaseBom = "34.10.0"
 glide = "5.0.5"
 junit = "4.13.2"
@@ -10,8 +11,10 @@ material = "1.13.0"
 activity = "1.12.4"
 constraintlayout = "2.2.1"
 playServicesMaps = "20.0.0"
+toasty = "1.5.2"
 
 [libraries]
+dotsindicator = { module = "com.tbuonomo:dotsindicator", version.ref = "dotsindicator" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore" }
@@ -24,6 +27,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+toasty = { module = "com.github.GrenderG:Toasty", version.ref = "toasty" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
