@@ -54,5 +54,9 @@ dependencies {
     implementation libs.firebase.analytics
     implementation libs.firebase.firestore
 
+    implementation(libs.dotsindicator)
+
+    implementation libs.toasty
+
 
 }
