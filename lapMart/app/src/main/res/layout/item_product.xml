@@ -52,7 +52,7 @@
                         android:fontFamily="@font/poppins"
                         android:text="Rs.440000.00"
                         android:textColor="@color/md_theme_secondary"
-                        android:textSize="11.5sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <ImageView
