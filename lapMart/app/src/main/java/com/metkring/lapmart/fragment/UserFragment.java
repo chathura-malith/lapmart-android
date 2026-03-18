@@ -46,6 +46,30 @@ public class UserFragment extends Fragment {
         backOption();
         productList = new ArrayList<>();
         loadProduct(view);
+        goToLogin(view);
+    }
+
+    private void goToLogin(View view){
+        view.findViewById(R.id.btnGoToLogin).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 2. Fragment එක මාරු කිරීමේ Logic එක
+                loadFragment(new SignInFragment());
+            }
+        });
+    }
+
+    private void loadFragment(Fragment fragment) {
+        getParentFragmentManager().beginTransaction()
+//                .setCustomAnimations(
+//                        R.anim.slide_in_right,  // එනකොට දකුණෙන් එන animation එක
+//                        R.anim.slide_out_left,  // යන එක වමට යන animation එක
+//                        R.anim.slide_in_left,   // Back කරද්දී වමෙන් එන animation එක
+//                        R.anim.slide_out_right  // Back කරද්දී දකුණට යන animation එක
+//                )
+                .replace(R.id.fragment_container, fragment) // මෙතන R.id.fragment_container එක ඔයාගේ MainActivity එකේ තියෙන FrameLayout එකේ ID එක වෙන්න ඕනේ
+                .addToBackStack(null) // Back බටන් එක එබුවම ආපහු මෙතනට එන්න ඕන නිසා
+                .commit();
     }
 
     private void loadProduct(View view) {

@@ -33,6 +33,8 @@ import com.metkring.lapmart.databinding.ActivityMainBinding;
 import com.metkring.lapmart.fragment.CartFragment;
 import com.metkring.lapmart.fragment.CategoryFragment;
 import com.metkring.lapmart.fragment.HomeFragment;
+import com.metkring.lapmart.fragment.SignInFragment;
+import com.metkring.lapmart.fragment.SignUpFragment;
 import com.metkring.lapmart.fragment.UserFragment;
 import com.metkring.lapmart.model.Product;
 
