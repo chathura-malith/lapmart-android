@@ -69,11 +69,10 @@ public class SplashActivity extends AppCompatActivity {
                 .postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        findViewById(R.id.splashProgressBar).setVisibility(View.INVISIBLE);
                         Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                         startActivity(intent);
                         finish();
                     }
-                }, 5000);
+                }, 2500);
     }
 }

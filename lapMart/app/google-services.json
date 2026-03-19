@@ -12,7 +12,20 @@
           "package_name": "com.metkring.lapmart"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1050312339873-kd9r8bg3i21u322rkmqthbgdjofvi82e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.metkring.lapmart",
+            "certificate_hash": "516964e44bffe211305de8a64f20228e3eec6e3b"
+          }
+        },
+        {
+          "client_id": "1050312339873-66u4v05ebbpsbqqq204rua2aa5q4ovh2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCGCmQ4O755Mk8zloUaiWGVnoufZEmC330"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1050312339873-66u4v05ebbpsbqqq204rua2aa5q4ovh2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

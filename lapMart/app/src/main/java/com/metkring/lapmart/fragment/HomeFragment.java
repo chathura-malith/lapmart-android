@@ -47,7 +47,7 @@ import java.util.List;
 
 
 public class HomeFragment extends Fragment implements OnMapReadyCallback {
-
+    private int activeRequests = 0;
     private FragmentHomeBinding binding;
     private BrandAdapter brandAdapter;
     private ProductAdapter adapter;
@@ -107,12 +107,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
 
         String formattedSearch = searchText.substring(0, 1).toUpperCase() + searchText.substring(1);
 
+        setLoading(true);
         db.collection("products")
                 .orderBy("model")
                 .startAt(formattedSearch)
                 .endAt(formattedSearch + "\uf8ff")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    setLoading(false);
                     productList.clear();
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                         Product product = document.toObject(Product.class);
@@ -130,6 +132,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    setLoading(false);
                     Log.e("FirestoreError", "Search Error: " + e.getMessage());
                 });
     }
@@ -208,10 +211,12 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         });
         binding.brandRecyclerView.setAdapter(brandAdapter);
 
+        setLoading(true);
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection("brands")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    setLoading(false);
                     if (!queryDocumentSnapshots.isEmpty()) {
                         brandsList.clear();
                         brandsList.add(new Brand("All"));
@@ -226,11 +231,13 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     }
                 })
                 .addOnFailureListener(e -> {
+                    setLoading(false);
                     Log.e("FirestoreError", "Brands Error: " + e.getMessage());
                 });
     }
 
     private void loadMap(View view) {
+        setLoading(true);
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
         if (mapFragment != null) {
@@ -251,6 +258,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void loadProduct(View view, String brandName) {
+        setLoading(true);
         RecyclerView productRv = binding.productRecyclerView;
         productRv.setLayoutManager(new GridLayoutManager(view.getContext(), 2));
 
@@ -267,7 +275,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         }
 
         query.get().addOnSuccessListener(queryDocumentSnapshots -> {
-                    binding.homeProgressBar.setVisibility(View.GONE);
+                    setLoading(false);
                     productList.clear();
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                         Product product = document.toObject(Product.class);
@@ -287,7 +295,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    binding.homeProgressBar.setVisibility(View.GONE);
+                    setLoading(false);
                     Log.e("FirestoreError", "Error getting documents: " + e.getMessage());
                 });
     }
@@ -302,6 +310,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nikaweratiya, 15f));
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
+        setLoading(false);
     }
 
     private void hideKeyboard() {
@@ -309,6 +318,20 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         if (view != null) {
             InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    private void setLoading(boolean isLoading) {
+        if (isLoading) {
+            activeRequests++;
+        } else {
+            if (activeRequests > 0) activeRequests--;
+        }
+
+        if (activeRequests > 0) {
+            binding.homeProgressBar.setVisibility(View.VISIBLE);
+        } else {
+            binding.homeProgressBar.setVisibility(View.GONE);
         }
     }
 
