@@ -21,6 +21,8 @@ import com.metkring.lapmart.adapter.ProductAdapter;
 import com.metkring.lapmart.adapter.ProductDetailImageAdapter;
 import com.metkring.lapmart.adapter.SimilarProductAdapter;
 import com.metkring.lapmart.databinding.FragmentProductDetailBinding;
+import com.metkring.lapmart.helper.CartManager;
+import com.metkring.lapmart.model.CartItem;
 import com.metkring.lapmart.model.Product;
 
 import java.util.ArrayList;
@@ -32,7 +34,6 @@ public class ProductDetailFragment extends Fragment {
 
     private FragmentProductDetailBinding binding;
     private FirebaseFirestore db;
-
     private int quantity = 1;
 
 
@@ -63,8 +64,21 @@ public class ProductDetailFragment extends Fragment {
                 loadProductDetails(productId);
             }
         }
-
         quantityChange();
+    }
+
+    private void setupCartAction(Product product) {
+        binding.addToCartBtn.setOnClickListener(v -> {
+            CartItem item = new CartItem(
+                    product.getId(),
+                    product.getModel(),
+                    product.getImageUrls().get(0),
+                    product.getPrice(),
+                    quantity
+            );
+
+            new CartManager(requireContext()).addItem(item, requireContext());
+        });
     }
 
     private void quantityChange(){
@@ -93,6 +107,7 @@ public class ProductDetailFragment extends Fragment {
                             product.setId(documentSnapshot.getId());
                             updateUI(product);
 
+                            setupCartAction(product);
                             binding.detailProgressBar.setVisibility(View.GONE);
                             binding.scrollView.setVisibility(View.VISIBLE);
                         }

@@ -110,14 +110,6 @@
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
-<!--                        <TextView-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:layout_marginEnd="8dp"-->
-<!--                            android:fontFamily="@font/poppins"-->
-<!--                            android:text="Qty"-->
-<!--                            android:textSize="16sp"-->
-<!--                            android:textStyle="bold" />-->
 
                         <androidx.appcompat.widget.AppCompatButton
                             android:id="@+id/btnDecreaseQuantity"

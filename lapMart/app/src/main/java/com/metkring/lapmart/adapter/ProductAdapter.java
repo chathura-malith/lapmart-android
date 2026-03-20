@@ -12,6 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.metkring.lapmart.R;
 import com.metkring.lapmart.fragment.ProductDetailFragment;
+import com.metkring.lapmart.helper.CartManager;
+import com.metkring.lapmart.model.CartItem;
 import com.metkring.lapmart.model.Product;
 
 import java.util.List;
@@ -58,6 +60,17 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
                     .addToBackStack(null)
                     .commit();
         });
+
+        holder.addToCart.setOnClickListener(v -> {
+            CartItem cartItem = new CartItem(
+                    product.getId(),
+                    product.getModel(),
+                    product.getImageUrls().get(0),
+                    product.getPrice(),
+                    1
+            );
+            new CartManager(v.getContext()).addItem(cartItem, v.getContext());
+        });
     }
 
     @Override
@@ -65,12 +78,13 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name, price;
-        ImageView image;
+        ImageView image,addToCart;
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.productName);
             price = itemView.findViewById(R.id.productPrice);
             image = itemView.findViewById(R.id.productImage);
+            addToCart = itemView.findViewById(R.id.addToCartBtn);
         }
     }
 }

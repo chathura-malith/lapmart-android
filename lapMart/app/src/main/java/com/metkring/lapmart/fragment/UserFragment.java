@@ -32,6 +32,7 @@ import com.google.firebase.storage.StorageReference;
 import com.metkring.lapmart.R;
 import com.metkring.lapmart.adapter.ProductAdapter;
 import com.metkring.lapmart.databinding.FragmentUserBinding;
+import com.metkring.lapmart.helper.CartManager;
 import com.metkring.lapmart.model.Product;
 
 import java.util.ArrayList;
@@ -126,6 +127,7 @@ public class UserFragment extends Fragment {
             binding.layoutLoggedIn.setVisibility(View.VISIBLE);
             binding.layoutLoggedOut.setVisibility(View.GONE);
             fetchUserDetails(currentUser.getUid());
+            new CartManager(requireContext()).syncLocalCartToFirebase(requireContext());
         } else {
             binding.layoutLoggedIn.setVisibility(View.GONE);
             binding.layoutLoggedOut.setVisibility(View.VISIBLE);
