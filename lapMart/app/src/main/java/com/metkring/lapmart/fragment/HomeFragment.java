@@ -32,6 +32,7 @@ import com.metkring.lapmart.R;
 import com.metkring.lapmart.adapter.BrandAdapter;
 import com.metkring.lapmart.adapter.ProductAdapter;
 import com.metkring.lapmart.databinding.FragmentHomeBinding;
+import com.metkring.lapmart.helper.CartManager;
 import com.metkring.lapmart.model.Brand;
 import com.metkring.lapmart.model.Product;
 
@@ -73,6 +74,7 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         call();
         loadMap(view);
         loadProduct(view, "All");
+        new CartManager(requireContext()).syncLocalCartToFirebase(requireContext());
 
         binding.searchBtn.setOnClickListener(v -> {
             String searchText = binding.searchEditText.getText().toString().trim();

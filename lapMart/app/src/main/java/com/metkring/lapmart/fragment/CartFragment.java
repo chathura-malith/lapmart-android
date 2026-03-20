@@ -2,65 +2,228 @@ package com.metkring.lapmart.fragment;
 
 import android.os.Bundle;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.metkring.lapmart.R;
+import com.metkring.lapmart.adapter.CartAdapter;
+import com.metkring.lapmart.databinding.FragmentCartBinding;
+import com.metkring.lapmart.helper.CartDbHelper;
+import com.metkring.lapmart.model.CartItem;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CartFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class CartFragment extends Fragment {
+import java.util.ArrayList;
+import java.util.List;
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+import es.dmoral.toasty.Toasty;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+public class CartFragment extends Fragment implements CartAdapter.OnCartActionListener {
 
-    public CartFragment() {
-        // Required empty public constructor
-    }
+    private FragmentCartBinding binding;
+    private CartAdapter adapter;
+    private List<CartItem> cartItemList = new ArrayList<>();
+    private CartDbHelper dbHelper;
+    private FirebaseAuth mAuth;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment CartFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static CartFragment newInstance(String param1, String param2) {
-        CartFragment fragment = new CartFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_cart, container, false);
+        binding = FragmentCartBinding.inflate(inflater, container, false);
+        dbHelper = new CartDbHelper(requireContext());
+        mAuth = FirebaseAuth.getInstance();
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        hideBottomNavigation();
+        backOption();
+
+        setupRecyclerView();
+        loadCartData();
+        updateTotalPrice();
+
+        binding.btnBack.setOnClickListener(v -> navigateToHome());
+        binding.btnShopNow.setOnClickListener(v -> navigateToHome());
+
+    }
+
+    private void loadCartData() {
+        binding.cartProgressBar.setVisibility(View.VISIBLE);
+
+        if (mAuth.getCurrentUser() != null) {
+            fetchCloudCart();
+        } else {
+            fetchLocalCart();
+        }
+    }
+
+    private void fetchLocalCart() {
+        cartItemList.clear();
+        cartItemList.addAll(dbHelper.getAllItems());
+
+        binding.cartProgressBar.setVisibility(View.GONE);
+        updateUI(cartItemList);
+    }
+
+    private void fetchCloudCart() {
+        String uid = mAuth.getCurrentUser().getUid();
+        FirebaseFirestore.getInstance()
+                .collection("users").document(uid)
+                .collection("cart")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    cartItemList.clear();
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        CartItem item = doc.toObject(CartItem.class);
+                        if (item != null) {
+                            cartItemList.add(item);
+                        }
+                    }
+                    binding.cartProgressBar.setVisibility(View.GONE);
+                    updateUI(cartItemList);
+                })
+                .addOnFailureListener(e -> {
+                    binding.cartProgressBar.setVisibility(View.GONE);
+                });
+    }
+
+    private void updateUI(List<CartItem> items) {
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+
+        updateTotalPrice();
+
+        binding.cartProgressBar.setVisibility(View.GONE);
+    }
+
+    private void hideBottomNavigation() {
+        if (getActivity() != null) {
+            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    private void navigateToHome() {
+        if (getActivity() != null) {
+            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+            if (bottomNav != null) {
+                bottomNav.setSelectedItemId(R.id.bottom_nav_home);
+            }
+        }
+    }
+
+    private void backOption() {
+        requireActivity().getOnBackPressedDispatcher()
+                .addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        navigateToHome();
+                    }
+                });
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (getActivity() != null) {
+            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void setupRecyclerView() {
+        binding.rvCartItems.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapter = new CartAdapter(cartItemList, this);
+        binding.rvCartItems.setAdapter(adapter);
+    }
+
+
+    private void updateTotalPrice() {
+        double total = 0;
+        for (CartItem item : cartItemList) {
+            total += (item.getPrice() * item.getQuantity());
+        }
+
+        binding.tvTotalPrice.setText("Rs. " + String.format("%,.2f", total));
+        binding.tvCartCount.setText("(" + cartItemList.size() + ")");
+
+
+        if (cartItemList.isEmpty()) {
+            binding.layoutEmptyCart.setVisibility(View.VISIBLE);
+            binding.scrollViewCart.setVisibility(View.GONE);
+            binding.cardBottom.setVisibility(View.GONE);
+        } else {
+            binding.layoutEmptyCart.setVisibility(View.GONE);
+            binding.scrollViewCart.setVisibility(View.VISIBLE);
+            binding.cardBottom.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void onQuantityChanged(int position, int newQuantity) {
+        CartItem item = cartItemList.get(position);
+        String productId = item.getProductId();
+
+        if (mAuth.getCurrentUser() != null) {
+            String uid = mAuth.getCurrentUser().getUid();
+            FirebaseFirestore.getInstance()
+                    .collection("users").document(uid)
+                    .collection("cart").document(productId)
+                    .update("quantity", newQuantity)
+                    .addOnSuccessListener(aVoid -> Toasty.success(requireContext(), "Quantity updated").show())
+                    .addOnFailureListener(e -> Toasty.error(requireContext(), "Failed to update quantity").show());
+        } else {
+            dbHelper.updateQuantity(productId, newQuantity);
+            Toasty.success(requireContext(), "Quantity updated").show();
+        }
+
+        item.setQuantity(newQuantity);
+        adapter.notifyItemChanged(position);
+        updateTotalPrice();
+
+
+    }
+
+    @Override
+    public void onRemoveItem(int position) {
+        CartItem item = cartItemList.get(position);
+        String productId = item.getProductId();
+
+        if (mAuth.getCurrentUser() != null) {
+            String uid = mAuth.getCurrentUser().getUid();
+            FirebaseFirestore.getInstance()
+                    .collection("users").document(uid)
+                    .collection("cart").document(productId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> Toasty.success(requireContext(), "Removed from Cart").show())
+                    .addOnFailureListener(e -> Toasty.error(requireContext(), "Failed to remove from Cart").show());
+        } else {
+            dbHelper.deleteItem(productId);
+            Toasty.success(requireContext(), "Removed from  Cart").show();
+        }
+
+        cartItemList.remove(position);
+        adapter.notifyItemRemoved(position);
+        adapter.notifyItemRangeChanged(position, cartItemList.size());
+        updateTotalPrice();
     }
 }
