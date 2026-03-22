@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F9FA">
+
+    <RelativeLayout
+        android:id="@+id/layoutHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:padding="20dp">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp"
+            android:src="@drawable/arrow_back_24px"
+            app:tint="@color/md_theme_onBackground_highContrast" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:fontFamily="@font/poppins"
+            android:text="Add Address"
+            android:textColor="@color/md_theme_onBackground_highContrast"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/cardBottom"
+        android:layout_below="@id/layoutHeader"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins"
+                android:text="Shipping Details"
+                android:textColor="@color/md_theme_onBackground_highContrast"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/rounded_search_bg"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <EditText android:id="@+id/etShippingName" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Full Name" android:textSize="14sp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                <EditText android:id="@+id/etShippingEmail" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Email Address" android:inputType="textEmailAddress" android:textSize="14sp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                <EditText android:id="@+id/etShippingContact" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Contact No" android:inputType="phone" android:textSize="14sp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                <EditText android:id="@+id/etShippingAddress1" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Address Line 1" android:textSize="14sp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                <EditText android:id="@+id/etShippingAddress2" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Address Line 2 (Optional)" android:textSize="14sp" />
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="2">
+                    <EditText android:id="@+id/etShippingCity" android:layout_width="0dp" android:layout_height="45dp" android:layout_marginEnd="8dp" android:layout_weight="1" android:background="@null" android:fontFamily="@font/poppins" android:hint="City" android:textSize="14sp" />
+                    <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#EEEEEE" />
+                    <EditText android:id="@+id/etShippingPostCode" android:layout_width="0dp" android:layout_height="45dp" android:layout_marginStart="8dp" android:layout_weight="1" android:background="@null" android:fontFamily="@font/poppins" android:hint="Post Code" android:inputType="number" android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/cbSameAsShipping"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:checked="true"
+                android:fontFamily="@font/poppins"
+                android:text="Billing address is same as shipping"
+                android:textColor="#424242"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:id="@+id/layoutBillingSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:fontFamily="@font/poppins"
+                    android:text="Billing Details"
+                    android:textColor="@color/md_theme_onBackground_highContrast"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/rounded_search_bg"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <EditText android:id="@+id/etBillingName" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Full Name" android:textSize="14sp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                    <EditText android:id="@+id/etBillingEmail" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Email Address" android:inputType="textEmailAddress" android:textSize="14sp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                    <EditText android:id="@+id/etBillingContact" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Contact No" android:inputType="phone" android:textSize="14sp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                    <EditText android:id="@+id/etBillingAddress1" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Address Line 1" android:textSize="14sp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                    <EditText android:id="@+id/etBillingAddress2" android:layout_width="match_parent" android:layout_height="45dp" android:background="@null" android:fontFamily="@font/poppins" android:hint="Address Line 2 (Optional)" android:textSize="14sp" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="8dp" android:background="#EEEEEE" />
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="2">
+                        <EditText android:id="@+id/etBillingCity" android:layout_width="0dp" android:layout_height="45dp" android:layout_marginEnd="8dp" android:layout_weight="1" android:background="@null" android:fontFamily="@font/poppins" android:hint="City" android:textSize="14sp" />
+                        <View android:layout_width="1dp" android:layout_height="match_parent" android:background="#EEEEEE" />
+                        <EditText android:id="@+id/etBillingPostCode" android:layout_width="0dp" android:layout_height="45dp" android:layout_marginStart="8dp" android:layout_weight="1" android:background="@null" android:fontFamily="@font/poppins" android:hint="Post Code" android:inputType="number" android:textSize="14sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardBottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        app:cardCornerRadius="0dp"
+        android:layout_marginBottom="40dp"
+        app:cardElevation="10dp">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnSaveAddress"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_margin="16dp"
+            android:background="@drawable/rounded_checkout_btn"
+            android:fontFamily="@font/poppins"
+            android:text="Save Address"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </androidx.cardview.widget.CardView>
+
+</RelativeLayout>

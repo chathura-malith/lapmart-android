@@ -7,6 +7,18 @@ android {
     namespace 'com.metkring.lapmart'
     compileSdk 36
 
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude("META-INF/*.kotlin_module")
+    }
+
     defaultConfig {
         applicationId "com.metkring.lapmart"
         minSdk 28
@@ -60,9 +72,22 @@ dependencies {
     implementation libs.credentials.play.services.auth
     implementation libs.googleid
 
+    implementation libs.play.services.tasks
+
     implementation(libs.dotsindicator)
 
     implementation libs.toasty
+
+    implementation libs.payhere.android.sdk
+    implementation libs.appcompat.v160
+    implementation libs.gson
+
+
+    implementation libs.retrofit
+    implementation libs.converter.gson
+
+    implementation libs.sendgrid.java
+
 
 
 }

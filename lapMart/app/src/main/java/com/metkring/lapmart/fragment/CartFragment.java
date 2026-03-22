@@ -11,7 +11,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -34,6 +37,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
     private List<CartItem> cartItemList = new ArrayList<>();
     private CartDbHelper dbHelper;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
 
     @Override
@@ -43,6 +47,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
         binding = FragmentCartBinding.inflate(inflater, container, false);
         dbHelper = new CartDbHelper(requireContext());
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
         return binding.getRoot();
     }
 
@@ -59,6 +64,87 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
         binding.btnBack.setOnClickListener(v -> navigateToHome());
         binding.btnShopNow.setOnClickListener(v -> navigateToHome());
 
+        binding.btnCheckOut.setOnClickListener(v -> {
+            if (mAuth.getCurrentUser() == null) {
+                Toasty.warning(requireContext(), "Please Sign to checkout", Toast.LENGTH_SHORT).show();
+                SignInFragment signInFragment = new SignInFragment();
+                Bundle args = new Bundle();
+                args.putBoolean("fromCart", true);
+                signInFragment.setArguments(args);
+
+                changeFragment(signInFragment);
+            } else {
+                validateStockAndProceed();
+            }
+        });
+    }
+
+    private void changeFragment(Fragment fragment) {
+        getParentFragmentManager().beginTransaction()
+                .setCustomAnimations(
+                        R.anim.slide_in_right,
+                        R.anim.slide_out_left,
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_right
+                )
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private void validateStockAndProceed() {
+        binding.cartProgressBar.setVisibility(View.VISIBLE);
+        binding.btnCheckOut.setEnabled(false);
+
+        List<Task<DocumentSnapshot>> tasks = new ArrayList<>();
+
+        for (CartItem item : cartItemList) {
+            Task<DocumentSnapshot> task = db.collection("products")
+                    .document(item.getProductId()).get();
+            tasks.add(task);
+        }
+
+        Tasks.whenAllSuccess(tasks).addOnSuccessListener(objects -> {
+            boolean allInStock = true;
+            String outOfStockItemName = "";
+            Long availableStock = 0L;
+
+            for (int i = 0; i < objects.size(); i++) {
+                DocumentSnapshot doc = (DocumentSnapshot) objects.get(i);
+                CartItem cartItem = cartItemList.get(i);
+
+                if (doc.exists()) {
+                    availableStock = doc.getLong("qty");
+
+                    if (availableStock == null || cartItem.getQuantity() > availableStock) {
+                        allInStock = false;
+                        outOfStockItemName = cartItem.getProductName();
+                        break;
+                    }
+                } else {
+                    allInStock = false;
+                    outOfStockItemName = cartItem.getProductName() + " (Not Found)";
+                    break;
+                }
+            }
+
+            binding.cartProgressBar.setVisibility(View.GONE);
+            binding.btnCheckOut.setEnabled(true);
+
+            if (allInStock) {
+                changeFragment(new CheckoutFragment());
+            } else {
+                Toasty.error(requireContext(),
+                        "Not enough stock for: " + outOfStockItemName + "we have only "
+                                + availableStock + " in stock", Toast.LENGTH_LONG).show();
+            }
+
+        }).addOnFailureListener(e -> {
+            binding.cartProgressBar.setVisibility(View.GONE);
+            binding.btnCheckOut.setEnabled(true);
+            Toasty.error(requireContext(), "Failed to verify stock",
+                    Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void loadCartData() {
@@ -81,11 +167,8 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
 
     private void fetchCloudCart() {
         String uid = mAuth.getCurrentUser().getUid();
-        FirebaseFirestore.getInstance()
-                .collection("users").document(uid)
-                .collection("cart")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
+        db.collection("users").document(uid).collection("cart")
+                .get().addOnSuccessListener(queryDocumentSnapshots -> {
                     cartItemList.clear();
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         CartItem item = doc.toObject(CartItem.class);
@@ -95,8 +178,7 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
                     }
                     binding.cartProgressBar.setVisibility(View.GONE);
                     updateUI(cartItemList);
-                })
-                .addOnFailureListener(e -> {
+                }).addOnFailureListener(e -> {
                     binding.cartProgressBar.setVisibility(View.GONE);
                 });
     }
@@ -113,7 +195,8 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
 
     private void hideBottomNavigation() {
         if (getActivity() != null) {
-            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+            BottomNavigationView bottomNav = getActivity().
+                    findViewById(R.id.bottom_navigation_view);
             if (bottomNav != null) {
                 bottomNav.setVisibility(View.GONE);
             }
@@ -122,7 +205,8 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
 
     private void navigateToHome() {
         if (getActivity() != null) {
-            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+            BottomNavigationView bottomNav = getActivity().
+                    findViewById(R.id.bottom_navigation_view);
             if (bottomNav != null) {
                 bottomNav.setSelectedItemId(R.id.bottom_nav_home);
             }
@@ -130,24 +214,13 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
     }
 
     private void backOption() {
-        requireActivity().getOnBackPressedDispatcher()
-                .addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
                         navigateToHome();
                     }
                 });
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (getActivity() != null) {
-            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
-            if (bottomNav != null) {
-                bottomNav.setVisibility(View.VISIBLE);
-            }
-        }
     }
 
     private void setupRecyclerView() {
@@ -185,12 +258,13 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
 
         if (mAuth.getCurrentUser() != null) {
             String uid = mAuth.getCurrentUser().getUid();
-            FirebaseFirestore.getInstance()
-                    .collection("users").document(uid)
-                    .collection("cart").document(productId)
-                    .update("quantity", newQuantity)
-                    .addOnSuccessListener(aVoid -> Toasty.success(requireContext(), "Quantity updated").show())
-                    .addOnFailureListener(e -> Toasty.error(requireContext(), "Failed to update quantity").show());
+            db.collection("users").document(uid)
+                    .collection("cart")
+                    .document(productId).update("quantity", newQuantity)
+                    .addOnSuccessListener(aVoid -> Toasty.success(requireContext(),
+                            "Quantity updated").show())
+                    .addOnFailureListener(e -> Toasty.error(requireContext(),
+                            "Failed to update quantity").show());
         } else {
             dbHelper.updateQuantity(productId, newQuantity);
             Toasty.success(requireContext(), "Quantity updated").show();
@@ -210,12 +284,12 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
 
         if (mAuth.getCurrentUser() != null) {
             String uid = mAuth.getCurrentUser().getUid();
-            FirebaseFirestore.getInstance()
-                    .collection("users").document(uid)
-                    .collection("cart").document(productId)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> Toasty.success(requireContext(), "Removed from Cart").show())
-                    .addOnFailureListener(e -> Toasty.error(requireContext(), "Failed to remove from Cart").show());
+            db.collection("users").document(uid).collection("cart")
+                    .document(productId).delete().addOnSuccessListener(
+                            aVoid -> Toasty.success(requireContext(),
+                                    "Removed from Cart").show()).addOnFailureListener(
+                            e -> Toasty.error(requireContext(),
+                                    "Failed to remove from Cart").show());
         } else {
             dbHelper.deleteItem(productId);
             Toasty.success(requireContext(), "Removed from  Cart").show();

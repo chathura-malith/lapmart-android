@@ -221,25 +221,13 @@
         android:background="@color/md_theme_onSecondary"
         android:paddingBottom="40dp">
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/checkoutBtn"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/rounded_checkout_btn"
-            android:fontFamily="@font/poppins"
-            android:text="Checkout"
-            android:textAllCaps="false"
-            android:textColor="#FFFEFF"
-            android:textStyle="bold" />
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/addToCartBtn"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:background="@drawable/rounded_add_to_cart_btn"
+            android:background="@drawable/rounded_checkout_btn"
             android:fontFamily="@font/poppins"
             android:text="Add To Cart"
             android:textAllCaps="false"
