@@ -31,6 +31,7 @@ public class SignInFragment extends Fragment {
 
     private FragmentSignInBinding binding;
     private FirebaseAuth mAuth;
+    private boolean isFromCart = false;
 
 
     @Override
@@ -45,6 +46,9 @@ public class SignInFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (getArguments() != null) {
+            isFromCart = getArguments().getBoolean("fromCart", false);
+        }
         bottomNavHide();
         binding.btnSignIn.setOnClickListener(v -> signInWithEmail());
         binding.btnGoogleSignIn.setOnClickListener(v -> googleSignIn());
@@ -137,7 +141,11 @@ public class SignInFragment extends Fragment {
     }
 
     private void navigateToHome() {
-        loadSignUpFragment(new UserFragment());
+        if (isFromCart) {
+            loadSignUpFragment(new CartFragment());
+        } else {
+            loadSignUpFragment(new UserFragment());
+        }
     }
 
     private void goToSignUp() {

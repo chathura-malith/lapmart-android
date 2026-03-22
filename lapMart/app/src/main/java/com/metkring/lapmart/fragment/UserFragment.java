@@ -89,6 +89,8 @@ public class UserFragment extends Fragment {
             intent.setType("image/*");
             imagePickerLauncher.launch(intent);
         });
+        binding.btnAddress.setOnClickListener(v-> loadFragment(new AddAddressFragment()));
+        binding.btnOrders.setOnClickListener(v-> loadFragment(new OrderFragment()));
     }
 
     private void uploadImageToFirebase() {
