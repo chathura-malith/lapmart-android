@@ -16,6 +16,15 @@ lapMart/*.iml
 lapMart/.idea/
 lapMart/app/*.iml
 
+# --- Android Project Specific (Admin App - LapMart Admin) ---
+LapMart\ Admin/.gradle/
+LapMart\ Admin/local.properties
+LapMart\ Admin/app/build/
+LapMart\ Admin/build/
+LapMart\ Admin/*.iml
+LapMart\ Admin/.idea/
+LapMart\ Admin/app/*.iml
+
 # --- Spring Boot Backend Specific (lapmart-backend) ---
 lapmart-backend/target/
 lapmart-backend/!.mvn/wrapper/maven-wrapper.jar
