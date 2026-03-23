@@ -27,6 +27,7 @@ import com.metkring.lapmart.api.SendGridApi;
 import com.metkring.lapmart.databinding.FragmentCheckoutBinding;
 import com.metkring.lapmart.model.Address;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -349,9 +350,15 @@ public class CheckoutFragment extends Fragment {
 
         for (Map<String, Object> item : cartItemsList) {
             String productId = (String) item.get("productId");
+            Long purchasedQuantity = (Long) item.get("quantity");
             if (productId != null) {
                 batch.delete(db.collection("users").
                         document(uid).collection("cart").document(productId));
+
+                if (purchasedQuantity != null) {
+                    batch.update(db.collection("products").document(productId),
+                            "qty", FieldValue.increment(-purchasedQuantity));
+                }
             }
         }
 
