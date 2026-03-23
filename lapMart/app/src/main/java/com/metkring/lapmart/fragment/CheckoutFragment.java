@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,8 +21,6 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 import com.metkring.lapmart.R;
-import com.metkring.lapmart.api.EmailJSApi;
-import com.metkring.lapmart.api.SendGridApi;
 import com.metkring.lapmart.databinding.FragmentCheckoutBinding;
 import com.metkring.lapmart.model.Address;
 
@@ -32,23 +29,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import es.dmoral.toasty.Toasty;
-import lk.payhere.androidsdk.PHConfigs;
 import lk.payhere.androidsdk.PHConstants;
 import lk.payhere.androidsdk.PHMainActivity;
 import lk.payhere.androidsdk.PHResponse;
 import lk.payhere.androidsdk.model.InitRequest;
 import lk.payhere.androidsdk.model.StatusResponse;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CheckoutFragment extends Fragment {
 
@@ -247,7 +235,7 @@ public class CheckoutFragment extends Fragment {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     subTotal = 0.0;
-                    cartItemsList.clear(); // 👈 කලින් දත්ත මකනවා
+                    cartItemsList.clear();
                     for (DocumentSnapshot doc : queryDocumentSnapshots) {
                         Double price = doc.getDouble("price");
                         Long quantity = doc.getLong("quantity");
