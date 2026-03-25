@@ -35,6 +35,7 @@ import com.metkring.lapmartadmin.R;
 import com.metkring.lapmartadmin.activity.MainActivity;
 import com.metkring.lapmartadmin.adapter.ProductImageAdapter;
 import com.metkring.lapmartadmin.databinding.FragmentAddProductBinding;
+import com.metkring.lapmartadmin.model.Product;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,6 +54,11 @@ public class AddProductFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseStorage storage;
 
+    private Product productToUpdate = null;
+    private boolean isUpdateMode = false;
+    private boolean isImageUpdated = false;
+
+
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -62,6 +68,13 @@ public class AddProductFragment extends Fragment {
         selectedImageUris = new ArrayList<>();
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
+
+        if (getArguments() != null) {
+            productToUpdate = (Product) getArguments().getSerializable("product_to_update");
+            if (productToUpdate != null) {
+                isUpdateMode = true;
+            }
+        }
 
         registerImagePicker();
         return binding.getRoot();
@@ -131,6 +144,49 @@ public class AddProductFragment extends Fragment {
 
         binding.btnAddProduct.setOnClickListener(v -> validateAndUploadData());
         binding.btnResetProduct.setOnClickListener(v -> resetForm());
+
+        if (isUpdateMode) {
+            loadProductDataForUpdate();
+        }else{
+            binding.tvHeaderTitle.setText("Add Product");
+            binding.btnAddProduct.setText("Add");
+        }
+    }
+
+    private void loadProductDataForUpdate() {
+        if (binding.tvHeaderTitle != null) {
+            binding.tvHeaderTitle.setText("Update Product");
+        }
+        binding.btnAddProduct.setText("Update");
+
+        binding.actvBrand.setText(productToUpdate.getBrand(), false);
+        binding.actvItem.setText(productToUpdate.getModel(), false);
+        binding.actvProcessor.setText(productToUpdate.getProcessor(), false);
+        binding.actvRam.setText(productToUpdate.getRam(), false);
+        binding.actvGpu.setText(productToUpdate.getGpu(), false);
+        binding.actvStorage.setText(productToUpdate.getStorage(), false);
+
+        binding.etProductPrice.setText(String.valueOf(productToUpdate.getPrice()));
+        binding.etProductQty.setText(String.valueOf(productToUpdate.getQty()));
+        binding.etProductDescription.setText(productToUpdate.getDescription());
+
+        if (productToUpdate.getImageUrls() != null && !productToUpdate.getImageUrls().isEmpty()) {
+            selectedImageUris.clear();
+            for (String url : productToUpdate.getImageUrls()) {
+                selectedImageUris.add(Uri.parse(url));
+            }
+            imageAdapter.notifyDataSetChanged();
+            binding.spiDotsIndicator.attachToPager(binding.vpProductImages);
+
+            binding.llImagePlaceholder.setVisibility(View.GONE);
+            binding.vpProductImages.setVisibility(View.VISIBLE);
+
+            if (selectedImageUris.size() > 1) {
+                binding.spiDotsIndicator.setVisibility(View.VISIBLE);
+            } else {
+                binding.spiDotsIndicator.setVisibility(View.GONE);
+            }
+        }
     }
 
     private void validateAndUploadData() {
@@ -161,57 +217,84 @@ public class AddProductFragment extends Fragment {
         int quantity = Integer.parseInt(qtyStr);
 
         showProgress("Uploading Images (0/" + selectedImageUris.size() + ")...");
-        uploadImagesAndSaveProduct(
-                brand, item, processor, ram, gpu, storageCap, price, quantity, description);
+
+        if (isUpdateMode && !isImageUpdated) {
+            showProgress("Updating Product...");
+            saveOrUpdateProduct(brand, item, processor, ram, gpu, storageCap, price,
+                    quantity, description, productToUpdate.getImageUrls());
+        } else {
+            showProgress(isUpdateMode ? "Uploading New Images..." : "Uploading Images (0/"
+                    + selectedImageUris.size() + ")...");
+            uploadImagesAndSaveProduct(brand, item, processor, ram, gpu, storageCap,
+                    price, quantity, description);
+        }
+
     }
 
-    private void uploadImagesAndSaveProduct(String brand, String category, String processor,
-                                            String ram, String gpu, String storageCap,
-                                            double price, int quantity, String description) {
-        List<String> uploadedImageUrls = new ArrayList<>();
-        int totalImages = selectedImageUris.size();
-        final int[] uploadedCount = {0}; // Track successfully uploaded images
+private void uploadImagesAndSaveProduct(String brand, String category, String processor,
+                                        String ram, String gpu, String storageCap,
+                                        double price, int quantity, String description) {
+    List<String> uploadedImageUrls = new ArrayList<>();
+    int totalImages = selectedImageUris.size();
+    final int[] uploadedCount = {0};
 
-        for (int i = 0; i < totalImages; i++) {
-            Uri imageUri = selectedImageUris.get(i);
-            // Create a unique file name for the image
-            String fileName = UUID.randomUUID().toString() + ".jpg";
-            StorageReference imageRef = storage.getReference().child(
-                    "product_images/" + fileName);
+    for (int i = 0; i < totalImages; i++) {
+        Uri imageUri = selectedImageUris.get(i);
 
-            imageRef.putFile(imageUri)
-                    .addOnSuccessListener(taskSnapshot -> {
-                        // Image uploaded, now get the download URL
-                        imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                            uploadedImageUrls.add(uri.toString());
-                            uploadedCount[0]++;
+        String uriString = imageUri.toString();
+        if (uriString.startsWith("https")) {
+            uploadedImageUrls.add(uriString);
+            uploadedCount[0]++;
+            checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category, processor,
+                    ram, gpu, storageCap, price, quantity, description, uploadedImageUrls);
+            continue;
+        }
 
-                            // Update progress text
-                            binding.tvProgressText.setText("Uploading Images (" + uploadedCount[0]
-                                    + "/" + totalImages + ")...");
+        String fileName = UUID.randomUUID().toString() + ".jpg";
+        StorageReference imageRef = storage.getReference().child("product_images/" + fileName);
 
-                            // If all images are uploaded, save the product data
-                            if (uploadedCount[0] == totalImages) {
-                                saveProductToFirestore(brand, category, processor, ram, gpu,
-                                        storageCap, price, quantity, description, uploadedImageUrls);
-                            }
-                        });
-                    })
-                    .addOnFailureListener(e -> {
-                        hideProgress();
-                        Toasty.error(requireContext(), "Failed to upload an image: "
-                                + e.getMessage(), Toast.LENGTH_LONG, true).show();
+        imageRef.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot -> {
+                    imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        uploadedImageUrls.add(uri.toString());
+                        uploadedCount[0]++;
+
+                        binding.tvProgressText.setText("Uploading Images ("
+                                + uploadedCount[0] + "/" + totalImages + ")...");
+
+                        checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category,
+                                processor, ram, gpu, storageCap, price, quantity
+                                , description, uploadedImageUrls);
                     });
+                })
+                .addOnFailureListener(e -> {
+                    hideProgress();
+                    Toasty.error(requireContext(), "Failed to upload an image: "
+                            + e.getMessage(), Toast.LENGTH_LONG, true).show();
+                });
+    }
+}
+
+    private void checkAndSaveIfAllUploaded(
+            int count, int total, String brand, String category, String processor, String ram,
+            String gpu, String storageCap, double price, int quantity,
+            String description, List<String> imageUrls
+    ) {
+        if (count == total) {
+            saveOrUpdateProduct(brand, category, processor, ram, gpu,
+                    storageCap, price, quantity, description, imageUrls);
         }
     }
 
-    private void saveProductToFirestore(
+
+
+    private void saveOrUpdateProduct(
             String brand, String category, String processor,
             String ram, String gpu, String storageCap, double price, int quantity,
             String description, List<String> imageUrls
     ) {
 
-        binding.tvProgressText.setText("Saving Product...");
+        binding.tvProgressText.setText(isUpdateMode ? "Updating Details..." : "Saving Product...");
 
         Map<String, Object> product = new HashMap<>();
         product.put("brand", brand);
@@ -221,24 +304,40 @@ public class AddProductFragment extends Fragment {
         product.put("gpu", gpu);
         product.put("storage", storageCap);
         product.put("price", price);
-        product.put("quantity", quantity);
+        product.put("qty", quantity);
         product.put("description", description);
         product.put("imageUrls", imageUrls);
-        product.put("timestamp", System.currentTimeMillis());
 
-        db.collection("products")
-                .add(product)
-                .addOnSuccessListener(documentReference -> {
-                    hideProgress();
-                    Toasty.success(requireContext(), "Product Added Successfully!",
-                            Toast.LENGTH_LONG, true).show();
-                    resetForm();
-                })
-                .addOnFailureListener(e -> {
-                    hideProgress();
-                    Toasty.error(requireContext(), "Failed to save product: "
-                            + e.getMessage(), Toast.LENGTH_LONG, true).show();
-                });
+        if (isUpdateMode) {
+            db.collection("products").document(productToUpdate.getProductId())
+                    .update(product)
+                    .addOnSuccessListener(aVoid -> {
+                        hideProgress();
+                        Toasty.success(requireContext(), "Product Updated Successfully!",
+                                Toast.LENGTH_LONG, true).show();
+                        getActivity().getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.fragment_container, new StockFragment())
+                                .addToBackStack(null)
+                                .commit();
+                    })
+                    .addOnFailureListener(e -> {
+                        hideProgress();
+                    });
+        } else {
+            // Add වෙන කෑල්ල
+            product.put("timestamp", System.currentTimeMillis());
+
+            db.collection("products").add(product)
+                    .addOnSuccessListener(documentReference -> {
+                        hideProgress();
+                        Toasty.success(requireContext(), "Product Added Successfully!",
+                                Toast.LENGTH_LONG, true).show();
+                        resetForm();
+                    })
+                    .addOnFailureListener(e -> {
+                        hideProgress();
+                    });
+        }
     }
 
     private void resetForm() {
@@ -409,6 +508,7 @@ public class AddProductFragment extends Fragment {
     }
 
     private void showProgress(String message) {
+        if (binding == null) return;
         binding.tvProgressText.setText(message);
         binding.rlProgressContainer.setVisibility(View.VISIBLE);
         binding.btnAddProduct.setEnabled(false);
@@ -416,10 +516,18 @@ public class AddProductFragment extends Fragment {
     }
 
     private void hideProgress() {
+        if (binding == null) return;
         binding.rlProgressContainer.setVisibility(View.GONE);
         binding.btnAddProduct.setEnabled(true);
         binding.btnResetProduct.setEnabled(true);
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        hideBottomNavigation();
+    }
+
 
     @Override
     public void onDestroyView() {

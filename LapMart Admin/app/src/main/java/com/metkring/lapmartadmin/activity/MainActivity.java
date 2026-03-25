@@ -23,7 +23,8 @@ import com.metkring.lapmartadmin.fragment.ReportFragment;
 import com.metkring.lapmartadmin.fragment.StockFragment;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
 
     private ActivityMainBinding binding;
     private BottomNavigationView bottomNavigationView;
