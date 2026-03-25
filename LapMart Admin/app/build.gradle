@@ -51,4 +51,9 @@ dependencies {
     implementation libs.firebase.storage
 
     implementation libs.toasty
+
+    implementation libs.scrollingpagerindicator
+
+    // 🔴 ViewPager2 - පින්තූර Slider එකට
+    implementation libs.viewpager2
 }
