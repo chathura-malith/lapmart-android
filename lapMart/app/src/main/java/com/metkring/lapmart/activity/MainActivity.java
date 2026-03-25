@@ -1,56 +1,57 @@
 package com.metkring.lapmart.activity;
 
-import android.content.Intent;
-import android.net.Uri;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageButton;
+import android.widget.Toast;
+
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.metkring.lapmart.R;
-import com.metkring.lapmart.adapter.BrandAdapter;
-import com.metkring.lapmart.adapter.ProductAdapter;
+
 import com.metkring.lapmart.databinding.ActivityMainBinding;
-import com.metkring.lapmart.fragment.AddAddressFragment;
 import com.metkring.lapmart.fragment.CartFragment;
 import com.metkring.lapmart.fragment.CategoryFragment;
-import com.metkring.lapmart.fragment.CheckoutFragment;
 import com.metkring.lapmart.fragment.HomeFragment;
-import com.metkring.lapmart.fragment.SignInFragment;
-import com.metkring.lapmart.fragment.SignUpFragment;
+import com.metkring.lapmart.fragment.ProductDetailFragment;
 import com.metkring.lapmart.fragment.UserFragment;
-import com.metkring.lapmart.model.Product;
 
-import java.util.ArrayList;
-import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements
+        NavigationView.OnNavigationItemSelectedListener {
 
     private ActivityMainBinding binding;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
 
-
-
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                    isGranted -> {
+                        if (isGranted) {
+                            Log.d("FCM", "Permission Granted");
+                        } else {
+                            Toast.makeText(this, "Notification permission denied!",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,11 +65,57 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         bottomNavigationView.setOnItemSelectedListener(this::onNavigationItemSelected);
 
+        checkAndRequestPermission();
+
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
             bottomNavigationView.setSelectedItemId(R.id.bottom_nav_home);
         }
 
+        FirebaseMessaging.getInstance().subscribeToTopic("new_products")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("FCM", "Successfully subscribed to new_products topic!");
+                    } else {
+                        Log.e("FCM", "Subscription failed!", task.getException());
+                    }
+                });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("new_products")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("FCM", "Successfully subscribed to new_products topic!");
+                    } else {
+                        Log.d("FCM", "Subscription failed!");
+                    }
+                });
+
+        if (getIntent() != null && getIntent().getExtras() != null) {
+            String incomingProductId = getIntent().getStringExtra("productId");
+            if (incomingProductId != null && !incomingProductId.isEmpty()) {
+                Log.d("FCM", "Notification Tapped! Product ID: " + incomingProductId);
+                Bundle bundle = new Bundle();
+                bundle.putString("product_id", incomingProductId);
+                ProductDetailFragment detailFragment = new ProductDetailFragment();
+                detailFragment.setArguments(bundle);
+
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, detailFragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
+        }
+
+    }
+
+    private void checkAndRequestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.POST_NOTIFICATIONS) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        }
     }
 
     @Override

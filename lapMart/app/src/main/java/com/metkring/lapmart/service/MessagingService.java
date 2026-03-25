@@ -28,15 +28,13 @@ public class MessagingService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage message) {
         String title = "Notification";
         String messageBody = "You have a new message";
-        String productId = null; // 🔴 Product ID එක ගන්න Variable එක
+        String productId = null;
 
-        // Notification එකක් ඇවිත් නම් Title එකයි Body එකයි ගන්නවා
         if (message.getNotification() != null) {
             title = message.getNotification().getTitle();
             messageBody = message.getNotification().getBody();
         }
 
-        // 🔴 හැංගිච්ච Data (productId) එක ඇවිත් නම් ඒක ගන්නවා
         if (message.getData().size() > 0) {
             productId = message.getData().get("productId");
             Log.d(TAG, "Message data payload: " + productId);
@@ -49,7 +47,6 @@ public class MessagingService extends FirebaseMessagingService {
         Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
-        // 🔴 Product ID එක තියෙනවා නම් Intent එකට දානවා
         if (productId != null) {
             intent.putExtra("productId", productId);
         }
@@ -65,7 +62,7 @@ public class MessagingService extends FirebaseMessagingService {
         String channelId = "default_channel";
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(
                 this, channelId)
-                .setSmallIcon(R.mipmap.ic_launcher) // 🔴 ඔයාගේ App Icon එක දෙන්න
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(title)
                 .setContentText(messageBody)
                 .setAutoCancel(true)
@@ -83,7 +80,7 @@ public class MessagingService extends FirebaseMessagingService {
             notificationManager.createNotificationChannel(channel);
         }
 
-        int notificationId = (int) System.currentTimeMillis(); // හැම Notification එකක්ම වෙන වෙනම පෙන්නන්න
+        int notificationId = (int) System.currentTimeMillis();
         notificationManager.notify(notificationId, notificationBuilder.build());
     }
 }

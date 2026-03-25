@@ -27,7 +27,8 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_splash);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
@@ -37,7 +38,8 @@ public class SplashActivity extends AppCompatActivity {
             getWindow().setDecorFitsSystemWindows(false);
             WindowInsetsController controller = getWindow().getInsetsController();
             if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                controller.hide(WindowInsets.Type.statusBars() |
+                        WindowInsets.Type.navigationBars());
             }
         } else {
             getWindow().setFlags(
@@ -69,7 +71,11 @@ public class SplashActivity extends AppCompatActivity {
                 .postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+                        Intent intent = new Intent(SplashActivity.this,
+                                MainActivity.class);
+                        if (getIntent() != null && getIntent().getExtras() != null) {
+                            intent.putExtras(getIntent().getExtras());
+                        }
                         startActivity(intent);
                         finish();
                     }
