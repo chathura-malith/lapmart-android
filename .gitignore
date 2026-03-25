@@ -34,5 +34,11 @@ lapmart-backend/.classpath
 lapmart-backend/*.log
 lapmart-backend/.factorypath
 
+# Node.js & Firebase Cloud Functions
+node_modules/
+**/node_modules/
+.firebase/
+Firebase Cloud Function/functions/node_modules/
+
 # --- Help files ---
 .navigation/
