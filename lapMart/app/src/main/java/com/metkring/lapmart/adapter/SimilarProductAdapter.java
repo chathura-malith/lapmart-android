@@ -37,7 +37,8 @@ public class SimilarProductAdapter extends RecyclerView.Adapter<SimilarProductAd
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Product product = productList.get(position);
 
-        holder.name.setText(product.getModel());
+        String fullName = product.getBrand() + " " + product.getModel() + "–" + product.getProcessor();
+        holder.name.setText(fullName);
         holder.price.setText("Rs." + String.format("%,.2f", product.getPrice()));
 
         // Image එක load කිරීම

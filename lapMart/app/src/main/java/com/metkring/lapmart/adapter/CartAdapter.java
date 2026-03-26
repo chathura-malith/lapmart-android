@@ -51,7 +51,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
             this.binding = binding;
         }
 
-        public void bind(CartItem item, int position) {
+        public void bind(CartItem item, int position) {;
             binding.tvProductName.setText(item.getProductName());
             binding.tvProductPrice.setText("Rs. " + String.format("%,.2f", item.getPrice()));
             binding.tvQuantity.setText(String.valueOf(item.getQuantity()));

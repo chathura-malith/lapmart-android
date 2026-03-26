@@ -2,6 +2,7 @@ package com.metkring.lapmart.activity;
 
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -67,10 +68,6 @@ public class MainActivity extends AppCompatActivity implements
 
         checkAndRequestPermission();
 
-        if (savedInstanceState == null) {
-            loadFragment(new HomeFragment());
-            bottomNavigationView.setSelectedItemId(R.id.bottom_nav_home);
-        }
 
         FirebaseMessaging.getInstance().subscribeToTopic("new_products")
                 .addOnCompleteListener(task -> {
@@ -81,19 +78,38 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 });
 
-        FirebaseMessaging.getInstance().subscribeToTopic("new_products")
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Log.d("FCM", "Successfully subscribed to new_products topic!");
-                    } else {
-                        Log.d("FCM", "Subscription failed!");
-                    }
-                });
 
-        if (getIntent() != null && getIntent().getExtras() != null) {
-            String incomingProductId = getIntent().getStringExtra("productId");
+        handleNotificationIntent(getIntent());
+
+        if (savedInstanceState == null && (getIntent() == null ||
+                !getIntent().hasExtra("productId"))) {
+            loadFragment(new HomeFragment());
+            bottomNavigationView.setSelectedItemId(R.id.bottom_nav_home);
+        }
+
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleNotificationIntent(intent);
+    }
+
+    private void handleNotificationIntent(Intent intent) {
+        if (intent != null && intent.hasExtra("productId")) {
+            String incomingProductId = intent.getStringExtra("productId");
             if (incomingProductId != null && !incomingProductId.isEmpty()) {
                 Log.d("FCM", "Notification Tapped! Product ID: " + incomingProductId);
+
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .commit();
+
+                if (bottomNavigationView != null) {
+                    bottomNavigationView.setSelectedItemId(R.id.bottom_nav_home);
+                }
+
                 Bundle bundle = new Bundle();
                 bundle.putString("product_id", incomingProductId);
                 ProductDetailFragment detailFragment = new ProductDetailFragment();
@@ -105,7 +121,6 @@ public class MainActivity extends AppCompatActivity implements
                         .commit();
             }
         }
-
     }
 
     private void checkAndRequestPermission() {

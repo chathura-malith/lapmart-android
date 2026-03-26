@@ -25,18 +25,20 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         this.productList = productList;
     }
 
-
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_product, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(
+                R.layout.item_product, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Product product = productList.get(position);
-        holder.name.setText(product.getModel());
+        String fullName = product.getBrand() + " " + product.getModel() + "–"
+                + product.getProcessor();
+        holder.name.setText(fullName);
         holder.price.setText("Rs." + String.format("%.2f", product.getPrice()));
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
             Glide.with(holder.itemView.getContext())
@@ -64,7 +66,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ViewHold
         holder.addToCart.setOnClickListener(v -> {
             CartItem cartItem = new CartItem(
                     product.getId(),
-                    product.getModel(),
+                    fullName,
                     product.getImageUrls().get(0),
                     product.getPrice(),
                     1

@@ -186,7 +186,8 @@ public class UserFragment extends Fragment {
         adapter = new ProductAdapter(productList);
         productRv.setAdapter(adapter);
 
-        db.collection("products").get().addOnSuccessListener(queryDocumentSnapshots -> {
+        db.collection("products").orderBy("timestamp", Query.Direction.DESCENDING)
+                .get().addOnSuccessListener(queryDocumentSnapshots -> {
                     setLoading(false);
                     productList.clear();
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {

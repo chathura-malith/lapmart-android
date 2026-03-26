@@ -67,8 +67,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         productList = new ArrayList<>();
-//        uploadBrandsToFirestore();
-//        uploadDummyProductsToFirestore();
         loadBrand(view);
 
         call();
@@ -271,7 +269,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         Query query;
 
         if (brandName.equals("All")) {
-            query = db.collection("products");
+            query = db.collection("products").
+                    orderBy("timestamp", Query.Direction.DESCENDING);
         } else {
             query = db.collection("products").whereEqualTo("brand", brandName);
         }
