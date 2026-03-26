@@ -1,9 +1,15 @@
 package com.metkring.lapmartadmin.fragment;
 
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.OnBackPressedCallback;
@@ -16,6 +22,8 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,12 +61,16 @@ public class AddProductFragment extends Fragment {
     private ActivityResultLauncher<String> imagePickerLauncher;
     private FirebaseFirestore db;
     private FirebaseStorage storage;
-
     private Product productToUpdate = null;
     private boolean isUpdateMode = false;
     private boolean isImageUpdated = false;
 
-
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private float acceleration;
+    private float currentAcceleration;
+    private float lastAcceleration;
+    private long lastShakeTime = 0;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -83,6 +95,14 @@ public class AddProductFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        sensorManager = (SensorManager) requireActivity().getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        }
+        acceleration = 0.00f;
+        currentAcceleration = SensorManager.GRAVITY_EARTH;
+        lastAcceleration = SensorManager.GRAVITY_EARTH;
 
         hideBottomNavigation();
         binding.btnBack.setOnClickListener(v -> navigateBackToHome());
@@ -153,6 +173,46 @@ public class AddProductFragment extends Fragment {
         }
     }
 
+    private final SensorEventListener sensorListener = new SensorEventListener() {
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            float x = event.values[0];
+            float y = event.values[1];
+            float z = event.values[2];
+
+            lastAcceleration = currentAcceleration;
+            currentAcceleration = (float) Math.sqrt((double) (x * x + y * y + z * z));
+            float delta = currentAcceleration - lastAcceleration;
+            acceleration = acceleration * 0.9f + delta;
+
+            if (acceleration > 12) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastShakeTime > 1500) {
+                    lastShakeTime = currentTime;
+                    handleShakeEvent();
+                }
+            }
+        }
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+
+    };
+
+    private void handleShakeEvent() {
+        Vibrator vibrator = (Vibrator) requireActivity().getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator != null && vibrator.hasVibrator()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                vibrator.vibrate(200);
+            }
+        }
+        resetForm();
+        Toasty.info(requireContext(), "Form Reset by Shake!", Toast.LENGTH_SHORT, true).show();
+    }
+
     private void loadProductDataForUpdate() {
         if (binding.tvHeaderTitle != null) {
             binding.tvHeaderTitle.setText("Update Product");
@@ -169,6 +229,7 @@ public class AddProductFragment extends Fragment {
         binding.etProductPrice.setText(String.valueOf(productToUpdate.getPrice()));
         binding.etProductQty.setText(String.valueOf(productToUpdate.getQty()));
         binding.etProductDescription.setText(productToUpdate.getDescription());
+        binding.etBuyingPrice.setText(String.valueOf(productToUpdate.getBuyingPrice()));
 
         if (productToUpdate.getImageUrls() != null && !productToUpdate.getImageUrls().isEmpty()) {
             selectedImageUris.clear();
@@ -199,6 +260,7 @@ public class AddProductFragment extends Fragment {
         String priceStr = binding.etProductPrice.getText().toString().trim();
         String qtyStr = binding.etProductQty.getText().toString().trim();
         String description = binding.etProductDescription.getText().toString().trim();
+        String buyingPriceStr = binding.etBuyingPrice.getText().toString().trim();
 
         if (selectedImageUris.isEmpty()) {
             Toasty.warning(requireContext(), "Please select at least one product image",
@@ -206,13 +268,15 @@ public class AddProductFragment extends Fragment {
             return;
         }
         if (brand.isEmpty() || item.isEmpty() || processor.isEmpty() || ram.isEmpty() ||
-                gpu.isEmpty() || storageCap.isEmpty() || priceStr.isEmpty() || qtyStr.isEmpty()
+                gpu.isEmpty() || storageCap.isEmpty() || priceStr.isEmpty() ||
+                buyingPriceStr.isEmpty() || qtyStr.isEmpty()
                 || description.isEmpty()) {
             Toasty.warning(requireContext(), "Please fill all fields",
                     Toast.LENGTH_SHORT, true).show();
             return;
         }
 
+        double buyingPrice = Double.parseDouble(buyingPriceStr);
         double price = Double.parseDouble(priceStr);
         int quantity = Integer.parseInt(qtyStr);
 
@@ -220,69 +284,128 @@ public class AddProductFragment extends Fragment {
 
         if (isUpdateMode && !isImageUpdated) {
             showProgress("Updating Product...");
-            saveOrUpdateProduct(brand, item, processor, ram, gpu, storageCap, price,
+            saveOrUpdateProduct(brand, item, processor, ram, gpu, storageCap, price,buyingPrice,
                     quantity, description, productToUpdate.getImageUrls());
         } else {
             showProgress(isUpdateMode ? "Uploading New Images..." : "Uploading Images (0/"
                     + selectedImageUris.size() + ")...");
-            uploadImagesAndSaveProduct(brand, item, processor, ram, gpu, storageCap,
+            uploadImagesAndSaveProduct(brand, item, processor, ram, gpu, storageCap,buyingPrice,
                     price, quantity, description);
         }
 
     }
 
-private void uploadImagesAndSaveProduct(String brand, String category, String processor,
-                                        String ram, String gpu, String storageCap,
-                                        double price, int quantity, String description) {
-    List<String> uploadedImageUrls = new ArrayList<>();
-    int totalImages = selectedImageUris.size();
-    final int[] uploadedCount = {0};
+//private void uploadImagesAndSaveProduct(
+//        String brand, String category, String processor,
+//        String ram, String gpu, String storageCap,double buyingPrice,
+//        double price, int quantity, String description
+//) {
+//    List<String> uploadedImageUrls = new ArrayList<>();
+//    int totalImages = selectedImageUris.size();
+//    final int[] uploadedCount = {0};
+//
+//    for (int i = 0; i < totalImages; i++) {
+//        Uri imageUri = selectedImageUris.get(i);
+//
+//        String uriString = imageUri.toString();
+//        if (uriString.startsWith("https")) {
+//            uploadedImageUrls.add(uriString);
+//            uploadedCount[0]++;
+//            checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category, processor,
+//                    ram, gpu, storageCap, buyingPrice, price, quantity, description, uploadedImageUrls);
+//            continue;
+//        }
+//
+//        String fileName = UUID.randomUUID().toString() + ".jpg";
+//        StorageReference imageRef = storage.getReference().child("product_images/" + fileName);
+//
+//        imageRef.putFile(imageUri)
+//                .addOnSuccessListener(taskSnapshot -> {
+//                    imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+//                        uploadedImageUrls.add(uri.toString());
+//                        uploadedCount[0]++;
+//
+//                        binding.tvProgressText.setText("Uploading Images ("
+//                                + uploadedCount[0] + "/" + totalImages + ")...");
+//
+//                        checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category,
+//                                processor, ram, gpu, storageCap, buyingPrice, price, quantity
+//                                , description, uploadedImageUrls);
+//                    });
+//                })
+//                .addOnFailureListener(e -> {
+//                    hideProgress();
+//                    Toasty.error(requireContext(), "Failed to upload an image: "
+//                            + e.getMessage(), Toast.LENGTH_LONG, true).show();
+//                });
+//    }
+//}
 
-    for (int i = 0; i < totalImages; i++) {
-        Uri imageUri = selectedImageUris.get(i);
+    private void uploadImagesAndSaveProduct(
+            String brand, String category, String processor,
+            String ram, String gpu, String storageCap, double buyingPrice,
+            double price, int quantity, String description
+    ) {
+        int totalImages = selectedImageUris.size();
+        String[] uploadedImageUrlsArray = new String[totalImages];
+        final int[] uploadedCount = {0};
 
-        String uriString = imageUri.toString();
-        if (uriString.startsWith("https")) {
-            uploadedImageUrls.add(uriString);
-            uploadedCount[0]++;
-            checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category, processor,
-                    ram, gpu, storageCap, price, quantity, description, uploadedImageUrls);
-            continue;
-        }
+        for (int i = 0; i < totalImages; i++) {
+            Uri imageUri = selectedImageUris.get(i);
+            final int currentIndex = i;
 
-        String fileName = UUID.randomUUID().toString() + ".jpg";
-        StorageReference imageRef = storage.getReference().child("product_images/" + fileName);
+            String uriString = imageUri.toString();
+            if (uriString.startsWith("https")) {
+                uploadedImageUrlsArray[currentIndex] = uriString;
+                uploadedCount[0]++;
+                checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category, processor,
+                        ram, gpu, storageCap, buyingPrice, price, quantity, description, getListFromArray(uploadedImageUrlsArray));
+                continue;
+            }
 
-        imageRef.putFile(imageUri)
-                .addOnSuccessListener(taskSnapshot -> {
-                    imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                        uploadedImageUrls.add(uri.toString());
-                        uploadedCount[0]++;
+            String fileName = UUID.randomUUID().toString() + ".jpg";
+            StorageReference imageRef = storage.getReference().child("product_images/" + fileName);
 
-                        binding.tvProgressText.setText("Uploading Images ("
-                                + uploadedCount[0] + "/" + totalImages + ")...");
+            imageRef.putFile(imageUri)
+                    .addOnSuccessListener(taskSnapshot -> {
+                        imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                            uploadedImageUrlsArray[currentIndex] = uri.toString();
+                            uploadedCount[0]++;
 
-                        checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category,
-                                processor, ram, gpu, storageCap, price, quantity
-                                , description, uploadedImageUrls);
+                            binding.tvProgressText.setText("Uploading Images ("
+                                    + uploadedCount[0] + "/" + totalImages + ")...");
+
+                            checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category,
+                                    processor, ram, gpu, storageCap, buyingPrice, price, quantity,
+                                    description, getListFromArray(uploadedImageUrlsArray));
+                        });
+                    })
+                    .addOnFailureListener(e -> {
+                        hideProgress();
+                        Toasty.error(requireContext(), "Failed to upload an image: "
+                                + e.getMessage(), Toast.LENGTH_LONG, true).show();
                     });
-                })
-                .addOnFailureListener(e -> {
-                    hideProgress();
-                    Toasty.error(requireContext(), "Failed to upload an image: "
-                            + e.getMessage(), Toast.LENGTH_LONG, true).show();
-                });
+        }
     }
-}
+
+    private List<String> getListFromArray(String[] array) {
+        List<String> list = new ArrayList<>();
+        for (String url : array) {
+            if (url != null) {
+                list.add(url);
+            }
+        }
+        return list;
+    }
 
     private void checkAndSaveIfAllUploaded(
             int count, int total, String brand, String category, String processor, String ram,
-            String gpu, String storageCap, double price, int quantity,
+            String gpu, String storageCap, double buyingPrice, double price, int quantity,
             String description, List<String> imageUrls
     ) {
         if (count == total) {
             saveOrUpdateProduct(brand, category, processor, ram, gpu,
-                    storageCap, price, quantity, description, imageUrls);
+                    storageCap, buyingPrice, price, quantity, description, imageUrls);
         }
     }
 
@@ -290,7 +413,7 @@ private void uploadImagesAndSaveProduct(String brand, String category, String pr
 
     private void saveOrUpdateProduct(
             String brand, String category, String processor,
-            String ram, String gpu, String storageCap, double price, int quantity,
+            String ram, String gpu, String storageCap,double buyingPrice, double price, int quantity,
             String description, List<String> imageUrls
     ) {
 
@@ -303,6 +426,7 @@ private void uploadImagesAndSaveProduct(String brand, String category, String pr
         product.put("ram", ram);
         product.put("gpu", gpu);
         product.put("storage", storageCap);
+        product.put("buyingPrice", buyingPrice);
         product.put("price", price);
         product.put("qty", quantity);
         product.put("description", description);
@@ -324,7 +448,6 @@ private void uploadImagesAndSaveProduct(String brand, String category, String pr
                         hideProgress();
                     });
         } else {
-            // Add වෙන කෑල්ල
             product.put("timestamp", System.currentTimeMillis());
 
             db.collection("products").add(product)
@@ -362,6 +485,7 @@ private void uploadImagesAndSaveProduct(String brand, String category, String pr
 
         binding.llImagePlaceholder.setVisibility(View.VISIBLE);
         binding.actvBrand.clearFocus();
+        binding.etBuyingPrice.setText("");
         binding.etProductPrice.clearFocus();
     }
 
@@ -480,19 +604,7 @@ private void uploadImagesAndSaveProduct(String brand, String category, String pr
         }
     }
 
-    private void showBottomNavigation() {
-        if (getActivity() != null) {
-            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
-            if (bottomNav != null) {
-                bottomNav.setVisibility(View.VISIBLE);
-            }
-        }
-    }
-
     private void navigateBackToHome() {
-
-        showBottomNavigation();
-
         if (getActivity() instanceof MainActivity) {
             MainActivity mainActivity = (MainActivity) getActivity();
             mainActivity.getSupportFragmentManager()
@@ -526,6 +638,19 @@ private void uploadImagesAndSaveProduct(String brand, String category, String pr
     public void onResume() {
         super.onResume();
         hideBottomNavigation();
+        if (sensorManager != null && accelerometer != null) {
+            sensorManager.registerListener(sensorListener, accelerometer,
+                    SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(sensorListener);
+        }
     }
 
 

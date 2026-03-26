@@ -53,7 +53,7 @@ dependencies {
     implementation libs.toasty
 
     implementation libs.scrollingpagerindicator
-
-    // 🔴 ViewPager2 - පින්තූර Slider එකට
     implementation libs.viewpager2
+
+    implementation libs.mpandroidchart
 }
