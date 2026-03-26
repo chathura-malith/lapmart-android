@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.metkring.lapmart.R;
@@ -54,9 +55,15 @@ public class ProductDetailFragment extends Fragment {
         if (bottomNav != null) {
             bottomNav.setVisibility(View.GONE);
         }
-        view.findViewById(R.id.btnBack).setOnClickListener(v -> {
-            getActivity().getOnBackPressedDispatcher().onBackPressed();
-        });
+        view.findViewById(R.id.btnBack).setOnClickListener(v -> handleBackNavigation());
+
+        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
+                new androidx.activity.OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+                        handleBackNavigation();
+                    }
+                });
 
         if (getArguments() != null) {
             String productId = getArguments().getString("product_id");
@@ -67,11 +74,26 @@ public class ProductDetailFragment extends Fragment {
         quantityChange();
     }
 
+
+    private void handleBackNavigation() {
+        if (getActivity() != null) {
+            // Bottom Nav එක ආයෙත් පෙන්නනවා
+            View bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+            if (bottomNav != null) {
+                bottomNav.setVisibility(View.VISIBLE);
+            }
+
+            getActivity().getSupportFragmentManager().popBackStack();
+        }
+    }
+
     private void setupCartAction(Product product) {
+        String fullName = product.getBrand() + " " + product.getModel() +
+                " – " + product.getProcessor();
         binding.addToCartBtn.setOnClickListener(v -> {
             CartItem item = new CartItem(
                     product.getId(),
-                    product.getModel(),
+                    fullName,
                     product.getImageUrls().get(0),
                     product.getPrice(),
                     quantity
@@ -92,7 +114,8 @@ public class ProductDetailFragment extends Fragment {
                 quantity--;
                 binding.tvQuantity.setText(String.valueOf(quantity));
             } else {
-                Toasty.error(getContext(), "Minimum quantity is 1", Toast.LENGTH_SHORT, true).show();
+                Toasty.error(getContext(), "Minimum quantity is 1",
+                        Toast.LENGTH_SHORT, true).show();
             }
         });
     }
@@ -100,6 +123,7 @@ public class ProductDetailFragment extends Fragment {
     private void loadProductDetails(String productId) {
         db.collection("products").document(productId).get()
                 .addOnSuccessListener(documentSnapshot -> {
+                    if (binding == null) return;
                     if (documentSnapshot.exists()) {
                         Product product = documentSnapshot.toObject(Product.class);
 
@@ -114,12 +138,16 @@ public class ProductDetailFragment extends Fragment {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    if (binding == null) return;
+                    Toast.makeText(getContext(), "Error: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 });
     }
 
     private void updateUI(Product product) {
-        binding.txtDetailTitle.setText(product.getModel());
+        if (binding == null) return;
+        String fullName = product.getBrand() + " " + product.getModel() + "–" + product.getProcessor();
+        binding.txtDetailTitle.setText(fullName);
         binding.txtDetailPrice.setText("Rs." + String.format("%,.2f", product.getPrice()));
 
         if (product.getDescription() != null) {
@@ -134,7 +162,8 @@ public class ProductDetailFragment extends Fragment {
         }
 
         if (product.getImageUrls() != null && !product.getImageUrls().isEmpty()) {
-            ProductDetailImageAdapter adapter = new ProductDetailImageAdapter(product.getImageUrls());
+            ProductDetailImageAdapter adapter = new ProductDetailImageAdapter(
+                    product.getImageUrls());
             binding.detailViewPager.setAdapter(adapter);
 
             binding.dotsIndicator.attachTo(binding.detailViewPager);

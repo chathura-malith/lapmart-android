@@ -1,4 +1,4 @@
-package com.metkring.lapmart.service; // ඔයාගේ package එක
+package com.metkring.lapmart.service;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
