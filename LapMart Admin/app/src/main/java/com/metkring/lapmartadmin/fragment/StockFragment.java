@@ -121,7 +121,6 @@ public class StockFragment extends Fragment {
     }
 
     private void navigateBackToHome() {
-        showBottomNavigation();
         if (getActivity() instanceof MainActivity) {
             MainActivity mainActivity = (MainActivity) getActivity();
             mainActivity.getSupportFragmentManager()
@@ -136,14 +135,6 @@ public class StockFragment extends Fragment {
         }
     }
 
-    private void showBottomNavigation() {
-        if (getActivity() != null) {
-            BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
-            if (bottomNav != null) {
-                bottomNav.setVisibility(View.VISIBLE);
-            }
-        }
-    }
 
     private void loadProductsFromFirestore() {
         binding.progressBar.setVisibility(View.VISIBLE);

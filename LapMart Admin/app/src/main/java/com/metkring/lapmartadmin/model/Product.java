@@ -14,6 +14,7 @@ public class Product implements Serializable {
     private String gpu;
     private List<String> imageUrls;
     private String model;
+    private double buyingPrice;
     private double price;
     private String processor;
     private int qty;
@@ -26,19 +27,30 @@ public class Product implements Serializable {
 
     public Product(
             String brand, String description, String gpu, List<String> imageUrls, String model,
-            double price, String processor, int qty, String ram, String storage, long timestamp
+            double buyingPrice, double price, String processor, int qty, String ram, String storage,
+            long timestamp
     ) {
         this.brand = brand;
         this.description = description;
         this.gpu = gpu;
         this.imageUrls = imageUrls;
         this.model = model;
+        this.buyingPrice = buyingPrice;
         this.price = price;
         this.processor = processor;
         this.qty = qty;
         this.ram = ram;
         this.storage = storage;
         this.timestamp = timestamp;
+    }
+
+
+    public double getBuyingPrice() {
+        return buyingPrice;
+    }
+
+    public void setBuyingPrice(double buyingPrice) {
+        this.buyingPrice = buyingPrice;
     }
 
     public String getProductId() {
