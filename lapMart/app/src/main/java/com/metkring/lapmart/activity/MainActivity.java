@@ -30,7 +30,7 @@ import com.metkring.lapmart.R;
 
 import com.metkring.lapmart.databinding.ActivityMainBinding;
 import com.metkring.lapmart.fragment.CartFragment;
-import com.metkring.lapmart.fragment.CategoryFragment;
+import com.metkring.lapmart.fragment.FilterFragment;
 import com.metkring.lapmart.fragment.HomeFragment;
 import com.metkring.lapmart.fragment.ProductDetailFragment;
 import com.metkring.lapmart.fragment.UserFragment;
@@ -144,13 +144,12 @@ public class MainActivity extends AppCompatActivity implements
         }
 
         if ( id == R.id.bottom_nav_home) {
-            //home logic here
             loadFragment(new HomeFragment());
             bottomNavigationView.getMenu().findItem(R.id.bottom_nav_home).setChecked(true);
         }
-        else if (id == R.id.bottom_nav_category) {
-            loadFragment(new CategoryFragment());
-            bottomNavigationView.getMenu().findItem(R.id.bottom_nav_category).setChecked(true);
+        else if (id == R.id.bottom_nav_filter) {
+            loadFragment(new FilterFragment());
+            bottomNavigationView.getMenu().findItem(R.id.bottom_nav_filter).setChecked(true);
         }
         else if (id == R.id.bottom_nav_you) {
             loadFragment(new UserFragment());

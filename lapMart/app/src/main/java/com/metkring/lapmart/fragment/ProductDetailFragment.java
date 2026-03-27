@@ -77,12 +77,6 @@ public class ProductDetailFragment extends Fragment {
 
     private void handleBackNavigation() {
         if (getActivity() != null) {
-            // Bottom Nav එක ආයෙත් පෙන්නනවා
-            View bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
-            if (bottomNav != null) {
-                bottomNav.setVisibility(View.VISIBLE);
-            }
-
             getActivity().getSupportFragmentManager().popBackStack();
         }
     }

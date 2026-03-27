@@ -1,16 +1,17 @@
 package com.metkring.lapmart.fragment;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -18,7 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.metkring.lapmart.R;
 import com.metkring.lapmart.adapter.ProductAdapter;
-import com.metkring.lapmart.databinding.FragmentCategoryBinding;
+import com.metkring.lapmart.databinding.FragmentFilterBinding;
 import com.metkring.lapmart.model.Product;
 
 import java.util.ArrayList;
@@ -26,9 +27,9 @@ import java.util.List;
 
 import es.dmoral.toasty.Toasty;
 
-public class CategoryFragment extends Fragment {
+public class FilterFragment extends Fragment {
 
-    private FragmentCategoryBinding binding;
+    private FragmentFilterBinding binding;
     private FirebaseFirestore db;
     private ProductAdapter adapter;
     private List<Product> productList;
@@ -36,7 +37,7 @@ public class CategoryFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        binding = FragmentCategoryBinding.inflate(inflater, container, false);
+        binding = FragmentFilterBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
@@ -58,10 +59,10 @@ public class CategoryFragment extends Fragment {
 
         binding.priceRangeSlider.addOnChangeListener(
                 (slider, value, fromUser) -> {
-            List<Float> values = slider.getValues();
-            binding.tvMinPrice.setText("Rs." + String.format("%,.0f", values.get(0)));
-            binding.tvMaxPrice.setText("Rs." + String.format("%,.0f", values.get(1)));
-        });
+                    List<Float> values = slider.getValues();
+                    binding.tvMinPrice.setText("Rs." + String.format("%,.0f", values.get(0)));
+                    binding.tvMaxPrice.setText("Rs." + String.format("%,.0f", values.get(1)));
+                });
 
         binding.btnApplyFilter.setOnClickListener(v -> applyFilters());
         binding.btnClearFilter.setOnClickListener(v -> clearFilters());
@@ -69,11 +70,11 @@ public class CategoryFragment extends Fragment {
 
         requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(),
                 new androidx.activity.OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                handleBackNavigation();
-            }
-        });
+                    @Override
+                    public void handleOnBackPressed() {
+                        handleBackNavigation();
+                    }
+                });
     }
 
     private void handleBackNavigation() {
@@ -107,14 +108,14 @@ public class CategoryFragment extends Fragment {
         brandList.add("All Brands");
         db.collection("brands").get().addOnSuccessListener(
                 queryDocumentSnapshots -> {
-            for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                String name = doc.getString("name");
-                if (name != null) brandList.add(name);
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                    android.R.layout.simple_dropdown_item_1line, brandList);
-            binding.dropdownBrand.setAdapter(adapter);
-        });
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        String name = doc.getString("name");
+                        if (name != null) brandList.add(name);
+                    }
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                            android.R.layout.simple_dropdown_item_1line, brandList);
+                    binding.dropdownBrand.setAdapter(adapter);
+                });
     }
 
     private void loadRamsToDropdown() {
@@ -122,14 +123,14 @@ public class CategoryFragment extends Fragment {
         ramList.add("All");
         db.collection("rams").get().addOnSuccessListener(
                 queryDocumentSnapshots -> {
-            for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                String name = doc.getString("name");
-                if (name != null) ramList.add(name);
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                    android.R.layout.simple_dropdown_item_1line, ramList);
-            binding.dropdownRam.setAdapter(adapter);
-        });
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        String name = doc.getString("name");
+                        if (name != null) ramList.add(name);
+                    }
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                            android.R.layout.simple_dropdown_item_1line, ramList);
+                    binding.dropdownRam.setAdapter(adapter);
+                });
     }
 
     private void loadProcessorsToDropdown() {
@@ -137,14 +138,14 @@ public class CategoryFragment extends Fragment {
         procList.add("All");
         db.collection("processors").get().addOnSuccessListener(
                 queryDocumentSnapshots -> {
-            for (DocumentSnapshot doc : queryDocumentSnapshots) {
-                String name = doc.getString("name");
-                if (name != null) procList.add(name);
-            }
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
-                    android.R.layout.simple_dropdown_item_1line, procList);
-            binding.dropdownProcessor.setAdapter(adapter);
-        });
+                    for (DocumentSnapshot doc : queryDocumentSnapshots) {
+                        String name = doc.getString("name");
+                        if (name != null) procList.add(name);
+                    }
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                            android.R.layout.simple_dropdown_item_1line, procList);
+                    binding.dropdownProcessor.setAdapter(adapter);
+                });
     }
 
     private void applyFilters() {

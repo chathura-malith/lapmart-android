@@ -87,7 +87,7 @@
         android:layout_below="@id/tabLayoutOrders"
         android:clipToPadding="false"
         android:paddingTop="8dp"
-        android:paddingBottom="80dp" />
+        android:paddingBottom="50dp" />
 
     <ProgressBar
         android:id="@+id/orderProgressBar"
