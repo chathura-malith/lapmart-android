@@ -24,6 +24,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.metkring.lapmart.R;
 import com.metkring.lapmart.databinding.FragmentSignInBinding;
+import com.metkring.lapmart.helper.CartManager;
 
 import es.dmoral.toasty.Toasty;
 
@@ -46,6 +47,7 @@ public class SignInFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        new CartManager(requireContext()).syncLocalCartToFirebase(requireContext());
         if (getArguments() != null) {
             isFromCart = getArguments().getBoolean("fromCart", false);
         }
