@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +23,11 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
 import com.metkring.lapmart.R;
 import com.metkring.lapmart.databinding.FragmentCheckoutBinding;
+import com.metkring.lapmart.dto.OrderItemDto;
+import com.metkring.lapmart.dto.OrderRequest;
+import com.metkring.lapmart.dto.StandardResponseDto;
 import com.metkring.lapmart.model.Address;
+import com.metkring.lapmart.service.RetrofitService;
 
 
 import java.util.ArrayList;
@@ -36,6 +41,7 @@ import lk.payhere.androidsdk.PHMainActivity;
 import lk.payhere.androidsdk.PHResponse;
 import lk.payhere.androidsdk.model.InitRequest;
 import lk.payhere.androidsdk.model.StatusResponse;
+import retrofit2.Call;
 
 
 public class CheckoutFragment extends Fragment {
@@ -78,7 +84,7 @@ public class CheckoutFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        binding = FragmentCheckoutBinding.inflate(inflater, container, false);
+        binding = FragmentCheckoutBinding.inflate(inflater, container,false);
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         return binding.getRoot();
@@ -354,6 +360,48 @@ public class CheckoutFragment extends Fragment {
             setLoading(false);
             Toasty.success(requireContext(), "Order Placed Successfully!",
                     Toast.LENGTH_SHORT).show();
+
+
+            List<OrderItemDto> itemDtos = new ArrayList<>();
+            for (Map<String, Object> itemMap : cartItemsList) {
+                String name = (String) itemMap.get("productName");
+
+                Object priceObj = itemMap.get("price");
+                Double price = (priceObj instanceof Long) ? ((Long) priceObj).doubleValue() :
+                        (Double) priceObj;
+
+                Object qtyObj = itemMap.get("quantity");
+                Integer qty = (qtyObj instanceof Long) ? ((Long) qtyObj).intValue() :
+                        (Integer) qtyObj;
+
+                itemDtos.add(new OrderItemDto(name, price, qty));
+            }
+
+            OrderRequest orderRequest = new OrderRequest(
+                    orderId,
+                    currentBillingAddress.getFullName(),
+                    currentBillingAddress.getEmail(),
+                    totalPayment,
+                    itemDtos
+            );
+
+            RetrofitService.getEmailApi().sendInvoiceEmail(orderRequest).enqueue(new retrofit2.Callback<StandardResponseDto>() {
+                @Override
+                public void onResponse(Call<StandardResponseDto> call, retrofit2.Response<StandardResponseDto> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        // Email එක ගියා!
+                        Log.d("EmailService", "Success: " + response.body().getMessage());
+                        Toasty.success(requireContext(), "Invoice sent to email!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Log.e("EmailService", "Failed: " + response.code());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<StandardResponseDto> call, Throwable t) {
+                    Log.e("EmailService", "Error: " + t.getMessage());
+                }
+            });
 
 
             requireActivity().getSupportFragmentManager().beginTransaction()
