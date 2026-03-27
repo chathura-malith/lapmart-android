@@ -52,6 +52,8 @@ dependencies {
 
     implementation libs.toasty
 
+    implementation(libs.dotsindicator)
+
     implementation libs.scrollingpagerindicator
     implementation libs.viewpager2
 

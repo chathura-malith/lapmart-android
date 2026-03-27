@@ -11,6 +11,7 @@ constraintlayout = "2.2.1"
 glide = "5.0.5"
 mpandroidchart = "v3.1.0"
 scrollingpagerindicator = "1.2.5"
+dotsindicator = "5.1.0"
 toasty = "1.5.2"
 viewpager2 = "1.1.0"
 
@@ -31,6 +32,7 @@ glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
 scrollingpagerindicator = { module = "ru.tinkoff.scrollingpagerindicator:scrollingpagerindicator", version.ref = "scrollingpagerindicator" }
 toasty = { module = "com.github.GrenderG:Toasty", version.ref = "toasty" }
+dotsindicator = { module = "com.tbuonomo:dotsindicator", version.ref = "dotsindicator" }
 viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
 
 [plugins]

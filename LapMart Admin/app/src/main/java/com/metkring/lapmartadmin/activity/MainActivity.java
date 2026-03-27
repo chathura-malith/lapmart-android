@@ -19,7 +19,7 @@ import com.metkring.lapmartadmin.R;
 import com.metkring.lapmartadmin.databinding.ActivityMainBinding;
 import com.metkring.lapmartadmin.fragment.AddProductFragment;
 import com.metkring.lapmartadmin.fragment.HomeFragment;
-import com.metkring.lapmartadmin.fragment.ReportFragment;
+import com.metkring.lapmartadmin.fragment.OrderFragment;
 import com.metkring.lapmartadmin.fragment.StockFragment;
 
 
@@ -69,9 +69,9 @@ public class MainActivity extends AppCompatActivity
             loadFragment(new StockFragment());
             bottomNavigationView.getMenu().findItem(R.id.bottom_nav_stock).setChecked(true);
         }
-        else if (id == R.id.bottom_nav_report) {
-            loadFragment(new ReportFragment());
-            bottomNavigationView.getMenu().findItem(R.id.bottom_nav_report).setChecked(true);
+        else if (id == R.id.bottom_nav_order) {
+            loadFragment(new OrderFragment());
+            bottomNavigationView.getMenu().findItem(R.id.bottom_nav_order).setChecked(true);
         }
 
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
