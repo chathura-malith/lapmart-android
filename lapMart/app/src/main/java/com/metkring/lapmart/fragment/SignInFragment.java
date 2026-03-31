@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -33,6 +34,7 @@ public class SignInFragment extends Fragment {
     private FragmentSignInBinding binding;
     private FirebaseAuth mAuth;
     private boolean isFromCart = false;
+    private CartManager cartManager;
 
 
     @Override
@@ -41,13 +43,13 @@ public class SignInFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentSignInBinding.inflate(inflater, container, false);
         mAuth = FirebaseAuth.getInstance();
+        cartManager = new CartManager(requireContext());
         return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        new CartManager(requireContext()).syncLocalCartToFirebase(requireContext());
         if (getArguments() != null) {
             isFromCart = getArguments().getBoolean("fromCart", false);
         }
@@ -76,10 +78,12 @@ public class SignInFragment extends Fragment {
                 .addOnCompleteListener(requireActivity(), task -> {
                     setLoading(false);
                     if (task.isSuccessful()) {
+                        cartManager.syncLocalCartToFirebase();
                         Toasty.success(requireContext(), "Login Successful!").show();
                         navigateToHome();
                     } else {
-                        Toasty.error(requireContext(), "Login failed please check your credentials").show();
+                        Toasty.error(requireContext(),
+                                "Login failed please check your credentials").show();
                     }
                 });
     }
@@ -98,7 +102,8 @@ public class SignInFragment extends Fragment {
         CredentialManager credentialManager = CredentialManager.create(requireContext());
 
         setLoading(true);
-        credentialManager.getCredentialAsync(requireActivity(), request, null, Runnable::run,
+        credentialManager.getCredentialAsync(requireActivity(), request,
+                null, Runnable::run,
                 new CredentialManagerCallback<>() {
                     @Override
                     public void onResult(GetCredentialResponse result) {
@@ -114,12 +119,16 @@ public class SignInFragment extends Fragment {
 
     private void handleGoogleSignIn(GetCredentialResponse result) {
         try {
-            GoogleIdTokenCredential credential = GoogleIdTokenCredential.createFrom(result.getCredential().getData());
-            AuthCredential authCredential = GoogleAuthProvider.getCredential(credential.getIdToken(), null);
+            GoogleIdTokenCredential credential = GoogleIdTokenCredential.
+                    createFrom(result.getCredential().getData());
+            AuthCredential authCredential = GoogleAuthProvider.getCredential(
+                    credential.getIdToken(), null);
 
-            mAuth.signInWithCredential(authCredential).addOnCompleteListener(task -> {
+            mAuth.signInWithCredential(authCredential).addOnCompleteListener(
+                    task -> {
                 setLoading(false);
                 if (task.isSuccessful()) {
+                    cartManager.syncLocalCartToFirebase();
                     Toasty.success(requireContext(), "Login Successful!").show();
                     navigateToHome();
                 }

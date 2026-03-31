@@ -40,8 +40,10 @@ public class CartManager {
                     })
                     .addOnFailureListener(e -> {
                         docRef.set(item)
-                                .addOnSuccessListener(aVoid -> Toasty.success(context, "Added to Cart!").show())
-                                .addOnFailureListener(err -> Toasty.error(context, "Failed to add to Cart").show());
+                                .addOnSuccessListener(aVoid -> Toasty.success(context,
+                                        "Added to Cart!").show())
+                                .addOnFailureListener(err -> Toasty.error(context,
+                                        "Failed to add to Cart").show());
                     });
         } else {
             dbHelper.addToCart(item);
@@ -49,7 +51,7 @@ public class CartManager {
         }
     }
 
-    public void syncLocalCartToFirebase(Context context) {
+    public void syncLocalCartToFirebase() {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user == null) return;
 
@@ -67,10 +69,12 @@ public class CartManager {
                     DocumentSnapshot document = task.getResult();
                     if (document != null && document.exists()) {
                         docRef.update("quantity", FieldValue.increment(item.getQuantity()))
-                                .addOnSuccessListener(aVoid -> Log.d("Sync", "Quantity updated for: " + item.getProductName()));
+                                .addOnSuccessListener(aVoid -> Log.d("Sync",
+                                        "Quantity updated for: " + item.getProductName()));
                     } else {
                         docRef.set(item)
-                                .addOnSuccessListener(aVoid -> Log.d("Sync", "New item synced: " + item.getProductName()));
+                                .addOnSuccessListener(aVoid -> Log.d("Sync",
+                                        "New item synced: " + item.getProductName()));
                     }
                 }
             });

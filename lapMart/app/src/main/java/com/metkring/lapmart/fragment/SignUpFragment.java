@@ -101,7 +101,8 @@ public class SignUpFragment extends Fragment {
 
     private void handleSignIn(GetCredentialResponse result) {
         try {
-            GoogleIdTokenCredential googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.getCredential().getData());
+            GoogleIdTokenCredential googleIdTokenCredential =
+                    GoogleIdTokenCredential.createFrom(result.getCredential().getData());
             String idToken = googleIdTokenCredential.getIdToken();
 
 
@@ -187,7 +188,8 @@ public class SignUpFragment extends Fragment {
                         }
                     } else {
                         setLoading(false);
-                        Toasty.error(requireContext(), "Registration Failed: " + task.getException().getMessage()).show();
+                        Toasty.error(requireContext(), "Registration Failed: "
+                                + task.getException().getMessage()).show();
                     }
                 });
     }

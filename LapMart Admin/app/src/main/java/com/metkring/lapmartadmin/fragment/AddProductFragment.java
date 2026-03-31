@@ -201,16 +201,19 @@ public class AddProductFragment extends Fragment {
     };
 
     private void handleShakeEvent() {
-        Vibrator vibrator = (Vibrator) requireActivity().getSystemService(Context.VIBRATOR_SERVICE);
+        Vibrator vibrator = (Vibrator) requireActivity().
+                getSystemService(Context.VIBRATOR_SERVICE);
         if (vibrator != null && vibrator.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE));
+                vibrator.vibrate(VibrationEffect.createOneShot(
+                        200, VibrationEffect.DEFAULT_AMPLITUDE));
             } else {
                 vibrator.vibrate(200);
             }
         }
         resetForm();
-        Toasty.info(requireContext(), "Form Reset by Shake!", Toast.LENGTH_SHORT, true).show();
+        Toasty.info(requireContext(), "Form Reset by Shake!",
+                Toast.LENGTH_SHORT, true).show();
     }
 
     private void loadProductDataForUpdate() {
@@ -295,52 +298,6 @@ public class AddProductFragment extends Fragment {
 
     }
 
-//private void uploadImagesAndSaveProduct(
-//        String brand, String category, String processor,
-//        String ram, String gpu, String storageCap,double buyingPrice,
-//        double price, int quantity, String description
-//) {
-//    List<String> uploadedImageUrls = new ArrayList<>();
-//    int totalImages = selectedImageUris.size();
-//    final int[] uploadedCount = {0};
-//
-//    for (int i = 0; i < totalImages; i++) {
-//        Uri imageUri = selectedImageUris.get(i);
-//
-//        String uriString = imageUri.toString();
-//        if (uriString.startsWith("https")) {
-//            uploadedImageUrls.add(uriString);
-//            uploadedCount[0]++;
-//            checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category, processor,
-//                    ram, gpu, storageCap, buyingPrice, price, quantity, description, uploadedImageUrls);
-//            continue;
-//        }
-//
-//        String fileName = UUID.randomUUID().toString() + ".jpg";
-//        StorageReference imageRef = storage.getReference().child("product_images/" + fileName);
-//
-//        imageRef.putFile(imageUri)
-//                .addOnSuccessListener(taskSnapshot -> {
-//                    imageRef.getDownloadUrl().addOnSuccessListener(uri -> {
-//                        uploadedImageUrls.add(uri.toString());
-//                        uploadedCount[0]++;
-//
-//                        binding.tvProgressText.setText("Uploading Images ("
-//                                + uploadedCount[0] + "/" + totalImages + ")...");
-//
-//                        checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category,
-//                                processor, ram, gpu, storageCap, buyingPrice, price, quantity
-//                                , description, uploadedImageUrls);
-//                    });
-//                })
-//                .addOnFailureListener(e -> {
-//                    hideProgress();
-//                    Toasty.error(requireContext(), "Failed to upload an image: "
-//                            + e.getMessage(), Toast.LENGTH_LONG, true).show();
-//                });
-//    }
-//}
-
     private void uploadImagesAndSaveProduct(
             String brand, String category, String processor,
             String ram, String gpu, String storageCap, double buyingPrice,
@@ -359,7 +316,8 @@ public class AddProductFragment extends Fragment {
                 uploadedImageUrlsArray[currentIndex] = uriString;
                 uploadedCount[0]++;
                 checkAndSaveIfAllUploaded(uploadedCount[0], totalImages, brand, category, processor,
-                        ram, gpu, storageCap, buyingPrice, price, quantity, description, getListFromArray(uploadedImageUrlsArray));
+                        ram, gpu, storageCap, buyingPrice, price, quantity, description,
+                        getListFromArray(uploadedImageUrlsArray));
                 continue;
             }
 

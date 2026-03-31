@@ -79,6 +79,9 @@ dependencies {
 
     implementation(libs.dotsindicator)
 
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
     implementation libs.toasty
 
     implementation libs.payhere.android.sdk

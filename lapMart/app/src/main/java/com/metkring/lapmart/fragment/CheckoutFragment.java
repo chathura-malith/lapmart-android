@@ -385,13 +385,16 @@ public class CheckoutFragment extends Fragment {
                     itemDtos
             );
 
-            RetrofitService.getEmailApi().sendInvoiceEmail(orderRequest).enqueue(new retrofit2.Callback<StandardResponseDto>() {
+            RetrofitService.getEmailApi().sendInvoiceEmail(orderRequest).
+                    enqueue(new retrofit2.Callback<StandardResponseDto>() {
                 @Override
-                public void onResponse(Call<StandardResponseDto> call, retrofit2.Response<StandardResponseDto> response) {
+                public void onResponse(Call<StandardResponseDto> call,
+                                       retrofit2.Response<StandardResponseDto> response) {
                     if (response.isSuccessful() && response.body() != null) {
                         // Email එක ගියා!
                         Log.d("EmailService", "Success: " + response.body().getMessage());
-                        Toasty.success(requireContext(), "Invoice sent to email!", Toast.LENGTH_SHORT).show();
+                        Toasty.success(requireContext(), "Invoice sent to email!",
+                                Toast.LENGTH_SHORT).show();
                     } else {
                         Log.e("EmailService", "Failed: " + response.code());
                     }
