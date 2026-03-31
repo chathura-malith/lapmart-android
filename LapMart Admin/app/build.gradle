@@ -51,6 +51,8 @@ dependencies {
     implementation libs.firebase.storage
 
     implementation libs.toasty
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
 
     implementation(libs.dotsindicator)
 

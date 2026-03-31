@@ -63,7 +63,8 @@ public class OrderFragment extends Fragment {
 
         binding.btnShopNow.setOnClickListener(v -> {
             if (getActivity() != null) {
-                BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+                BottomNavigationView bottomNav = getActivity().findViewById
+                        (R.id.bottom_navigation_view);
                 if (bottomNav != null) {
                     bottomNav.setSelectedItemId(R.id.bottom_nav_home);
                 }

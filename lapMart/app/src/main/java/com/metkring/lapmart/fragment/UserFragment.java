@@ -129,7 +129,6 @@ public class UserFragment extends Fragment {
             binding.layoutLoggedIn.setVisibility(View.VISIBLE);
             binding.layoutLoggedOut.setVisibility(View.GONE);
             fetchUserDetails(currentUser.getUid());
-            new CartManager(requireContext()).syncLocalCartToFirebase(requireContext());
         } else {
             binding.layoutLoggedIn.setVisibility(View.GONE);
             binding.layoutLoggedOut.setVisibility(View.VISIBLE);
@@ -213,7 +212,8 @@ public class UserFragment extends Fragment {
             @Override
             public void handleOnBackPressed() {
                 if (getActivity() != null) {
-                    BottomNavigationView bottomNav = getActivity().findViewById(R.id.bottom_navigation_view);
+                    BottomNavigationView bottomNav = getActivity().findViewById
+                            (R.id.bottom_navigation_view);
 
                     if (bottomNav.getSelectedItemId() != R.id.bottom_nav_home) {
                         bottomNav.setSelectedItemId(R.id.bottom_nav_home);

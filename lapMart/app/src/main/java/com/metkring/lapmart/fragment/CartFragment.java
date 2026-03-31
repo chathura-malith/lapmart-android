@@ -66,7 +66,8 @@ public class CartFragment extends Fragment implements CartAdapter.OnCartActionLi
 
         binding.btnCheckOut.setOnClickListener(v -> {
             if (mAuth.getCurrentUser() == null) {
-                Toasty.warning(requireContext(), "Please Sign to checkout", Toast.LENGTH_SHORT).show();
+                Toasty.warning(requireContext(), "Please Sign to checkout",
+                        Toast.LENGTH_SHORT).show();
                 SignInFragment signInFragment = new SignInFragment();
                 Bundle args = new Bundle();
                 args.putBoolean("fromCart", true);

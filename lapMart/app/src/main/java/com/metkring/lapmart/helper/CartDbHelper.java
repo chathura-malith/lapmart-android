@@ -20,7 +20,8 @@ public class CartDbHelper extends SQLiteOpenHelper {
     public static final String TABLE_NAME = "cart";
 
     public CartDbHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        super(context, DATABASE_NAME,
+                null, DATABASE_VERSION);
     }
 
     @Override

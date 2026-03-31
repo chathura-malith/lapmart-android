@@ -72,7 +72,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         call();
         loadMap(view);
         loadProduct(view, "All");
-        new CartManager(requireContext()).syncLocalCartToFirebase(requireContext());
 
         binding.searchBtn.setOnClickListener(v -> {
             String searchText = binding.searchEditText.getText().toString().trim();
@@ -105,7 +104,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private void searchInDatabase(String searchText) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        String formattedSearch = searchText.substring(0, 1).toUpperCase() + searchText.substring(1);
+        String formattedSearch = searchText.substring(0, 1).toUpperCase() +
+                searchText.substring(1);
 
         setLoading(true);
         db.collection("products")
@@ -136,66 +136,6 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
                     Log.e("FirestoreError", "Search Error: " + e.getMessage());
                 });
     }
-
-
-    private void uploadBrandsToFirestore() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-        String[] brandsArray = {"Apple", "MSI", "Asus", "HP", "Dell", "Lenovo", "Acer", "Gigabyte"};
-
-        for (String brandName : brandsArray) {
-            Brand brand = new Brand(brandName);
-
-            db.collection("brands")
-                    .add(brand)
-                    .addOnSuccessListener(documentReference -> {
-                        Log.d("Firestore", brandName + " සාර්ථකව ඇතුළත් කළා!");
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("Firestore", brandName + " ඇතුළත් කිරීමේදී දෝෂයක්: " + e.getMessage());
-                    });
-        }
-    }
-
-//    private void uploadDummyProductsToFirestore() {
-//        FirebaseFirestore db = FirebaseFirestore.getInstance();
-//        List<Product> dummyProducts = new ArrayList<>();
-//
-//        dummyProducts.add(new Product(
-//                "HP",
-//                "- AMD Ryzen 7 7840HS - 1TB SSD - 16GB DDR5 RAM - RTX 4050 6GB",
-//                "6GB NVIDIA RTX 4050",
-//                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2025/11/HP-Victus-15-Gaming-i5.jpg"),
-//                "HP Victus 15 2024",
-//                325000.0,
-//                "Ryzen 7",
-//                10,
-//                "16GB DDR5",
-//                "1TB NVMe SSD"
-//        ));
-//
-//        // 3. Dell Laptop
-//        dummyProducts.add(new Product(
-//                "Dell",
-//                "- Intel Core i7 13th Gen - 512GB SSD - 16GB RAM - 15.6 FHD Display",
-//                "Intel Iris Xe Graphics",
-//                Arrays.asList("https://www.laptop.lk/wp-content/uploads/2024/12/Dell-Inspiron-3520-%E2%80%93-i5-1.jpg"),
-//                "Dell Inspiron 15 3520",
-//                245000.0,
-//                "i7",
-//                5,
-//                "16GB DDR4",
-//                "512GB NVMe SSD"
-//        ));
-//
-//        // Firestore එකට ඇතුළත් කිරීම
-//        for (Product product : dummyProducts) {
-//            db.collection("products")
-//                    .add(product)
-//                    .addOnSuccessListener(documentReference -> Log.d("Firestore", product.getModel() + " added!"))
-//                    .addOnFailureListener(e -> Log.e("Firestore", "Error: " + e.getMessage()));
-//        }
-//    }
 
 
     private void loadBrand(View view) {
@@ -307,7 +247,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mMap = googleMap;
 
         LatLng nikaweratiya = new LatLng(7.7494, 80.1174);
-        mMap.addMarker(new MarkerOptions().position(nikaweratiya).title("LapMart - Nikaweratiya Branch"));
+        mMap.addMarker(new MarkerOptions().position(nikaweratiya).
+                title("LapMart - Nikaweratiya Branch"));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nikaweratiya, 15f));
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
@@ -317,7 +258,8 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private void hideKeyboard() {
         View view = this.getActivity().getCurrentFocus();
         if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getActivity()
+                    .getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
