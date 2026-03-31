@@ -104,22 +104,34 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
     private void searchInDatabase(String searchText) {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        String formattedSearch = searchText.substring(0, 1).toUpperCase() +
-                searchText.substring(1);
+        String lowerCaseSearchText = searchText.toLowerCase().trim();
 
         setLoading(true);
+
         db.collection("products")
-                .orderBy("model")
-                .startAt(formattedSearch)
-                .endAt(formattedSearch + "\uf8ff")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     setLoading(false);
                     productList.clear();
+
                     for (DocumentSnapshot document : queryDocumentSnapshots.getDocuments()) {
                         Product product = document.toObject(Product.class);
-                        if (product != null) productList.add(product);
+                        if (product != null) {
+                            product.setId(document.getId());
+
+                            boolean matchBrand = product.getBrand() != null && product.getBrand().
+                                    toLowerCase().contains(lowerCaseSearchText);
+                            boolean matchModel = product.getModel() != null && product.getModel().
+                                    toLowerCase().contains(lowerCaseSearchText);
+                            boolean matchProcessor = product.getProcessor() != null && product.
+                                    getProcessor().toLowerCase().contains(lowerCaseSearchText);
+
+                            if (matchBrand || matchModel || matchProcessor) {
+                                productList.add(product);
+                            }
+                        }
                     }
+
                     if (adapter != null) {
                         adapter.notifyDataSetChanged();
                         if (productList.isEmpty()) {
