@@ -429,6 +429,7 @@ public class AddProductFragment extends Fragment {
         binding.actvGpu.setText("");
         binding.actvStorage.setText("");
         binding.etProductPrice.setText("");
+        binding.etBuyingPrice.setText("");
         binding.etProductQty.setText("");
         binding.etProductDescription.setText("");
 
@@ -443,8 +444,15 @@ public class AddProductFragment extends Fragment {
 
         binding.llImagePlaceholder.setVisibility(View.VISIBLE);
         binding.actvBrand.clearFocus();
-        binding.etBuyingPrice.setText("");
+        binding.actvItem.clearFocus();
+        binding.actvProcessor.clearFocus();
+        binding.actvRam.clearFocus();
+        binding.actvGpu.clearFocus();
+        binding.actvStorage.clearFocus();
         binding.etProductPrice.clearFocus();
+        binding.etProductQty.clearFocus();
+        binding.etProductDescription.clearFocus();
+        binding.etBuyingPrice.clearFocus();
     }
 
 
