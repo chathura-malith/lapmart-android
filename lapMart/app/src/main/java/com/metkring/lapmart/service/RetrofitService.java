@@ -4,7 +4,7 @@ import com.metkring.lapmart.api.EmailApi;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitService {
-    private static final String BASE_URL = "http://192.168.8.199:8080/";
+    private static final String BASE_URL = "http://13.229.95.130:8080/";
     private static Retrofit retrofit = null;
 
     public static EmailApi getEmailApi() {
