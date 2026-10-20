@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,6 +16,8 @@ import com.metkring.lapmartadmin.R;
 import com.metkring.lapmartadmin.model.Product; // ඔයාගේ Product model එකේ path එක හරියටම දෙන්න
 
 import java.util.List;
+
+import es.dmoral.toasty.Toasty;
 
 public class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHolder> {
 
@@ -66,6 +69,14 @@ public class StockAdapter extends RecyclerView.Adapter<StockAdapter.StockViewHol
         }
 
         holder.btnEdit.setOnClickListener(v -> listener.onEditClick(product));
+        holder.itemView.setOnLongClickListener(v -> {
+            double profit = product.getPrice() - product.getBuyingPrice();
+
+            Toasty.info(v.getContext(), "Buying Price: Rs." + product.getBuyingPrice()
+                            + " | Profit per unit: Rs." + profit,
+                    Toast.LENGTH_SHORT).show();
+            return true;
+        });
     }
 
     @Override
