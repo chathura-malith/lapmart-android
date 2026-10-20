@@ -25,6 +25,8 @@ playServicesTasks = "18.4.1"
 retrofit = "3.0.0"
 sendgridJava = "4.10.3"
 toasty = "1.5.2"
+ucrop = "2.2.8"
+ucropVersion = "2.2.8"
 
 [libraries]
 appcompat-v160 = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
@@ -58,6 +60,8 @@ play-services-tasks = { module = "com.google.android.gms:play-services-tasks", v
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 sendgrid-java = { module = "com.sendgrid:sendgrid-java", version.ref = "sendgridJava" }
 toasty = { module = "com.github.GrenderG:Toasty", version.ref = "toasty" }
+ucrop = { module = "com.github.yalantis:ucrop", version.ref = "ucropVersion" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

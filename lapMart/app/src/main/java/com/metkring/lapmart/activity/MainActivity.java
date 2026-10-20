@@ -2,8 +2,12 @@ package com.metkring.lapmart.activity;
 
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -42,6 +46,35 @@ public class MainActivity extends AppCompatActivity implements
     private ActivityMainBinding binding;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
+
+    private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ConnectivityManager cm = (ConnectivityManager)
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo activeNetwork = cm != null ? cm.getActiveNetworkInfo() : null;
+            if (activeNetwork == null || !activeNetwork.isConnected()) {
+                es.dmoral.toasty.Toasty.warning(
+                        context,
+                        "No Internet! Using Offline SQLite Mode.",
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        registerReceiver(networkChangeReceiver, new android.content.IntentFilter(
+                android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(networkChangeReceiver);
+    }
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(),

@@ -264,6 +264,14 @@ public class HomeFragment extends Fragment implements OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(nikaweratiya, 15f));
 
         mMap.getUiSettings().setZoomControlsEnabled(true);
+
+        mMap.getUiSettings().setCompassEnabled(true);
+        mMap.getUiSettings().setMapToolbarEnabled(true);
+        mMap.addCircle(new com.google.android.gms.maps.model.CircleOptions()
+                .center(nikaweratiya)
+                .radius(10000)
+                .strokeColor(android.graphics.Color.RED)
+                .fillColor(0x22FF0000));
         setLoading(false);
     }
 

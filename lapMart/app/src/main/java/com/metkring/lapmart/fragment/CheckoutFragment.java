@@ -361,6 +361,8 @@ public class CheckoutFragment extends Fragment {
             Toasty.success(requireContext(), "Order Placed Successfully!",
                     Toast.LENGTH_SHORT).show();
 
+// CheckoutFragment.java -> batch.commit().addOnSuccessListener ඇතුළට:
+            saveReceiptToExternalStorage(orderId, totalPayment);
 
             List<OrderItemDto> itemDtos = new ArrayList<>();
             for (Map<String, Object> itemMap : cartItemsList) {
@@ -416,6 +418,122 @@ public class CheckoutFragment extends Fragment {
             Toasty.error(requireContext(), "Failed to save order",
                     Toast.LENGTH_SHORT).show();
         });
+    }
+    private void saveReceiptToExternalStorage(String orderId, double amount) {
+        String fileName = "Invoice_" + orderId + ".pdf";
+
+        android.graphics.pdf.PdfDocument pdfDocument = new android.graphics.pdf.PdfDocument();
+        android.graphics.pdf.PdfDocument.PageInfo pageInfo = new android.graphics.pdf.PdfDocument
+                .PageInfo.Builder(400, 600, 1).create();
+        android.graphics.pdf.PdfDocument.Page page = pdfDocument.startPage(pageInfo);
+
+        android.graphics.Canvas canvas = page.getCanvas();
+        android.graphics.Paint paint = new android.graphics.Paint();
+
+        paint.setTextSize(18);
+        paint.setColor(android.graphics.Color.BLACK);
+        paint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT,
+                android.graphics.Typeface.BOLD));
+        canvas.drawText("LAPMART - OFFICIAL INVOICE", 60, 40, paint);
+        paint.setStrokeWidth(2);
+        canvas.drawLine(20, 55, 380, 55, paint);
+
+        paint.setTextSize(12);
+        paint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT,
+                android.graphics.Typeface.NORMAL));
+        canvas.drawText("Order ID: " + orderId, 20, 80, paint);
+
+        if (currentBillingAddress != null) {
+            canvas.drawText("Customer: " + currentBillingAddress.getFullName(),
+                    20, 100, paint);
+            canvas.drawText("Email: " + currentBillingAddress.getEmail(), 20, 120, paint);
+        }
+        canvas.drawLine(20, 135, 380, 135, paint);
+
+        paint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT,
+                android.graphics.Typeface.BOLD));
+        canvas.drawText("Item Name", 20, 160, paint);
+        canvas.drawText("Qty", 260, 160, paint);
+        canvas.drawText("Price", 310, 160, paint);
+
+        paint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT,
+                android.graphics.Typeface.NORMAL));
+        canvas.drawLine(20, 170, 380, 170, paint);
+
+        int yPosition = 190;
+        if (cartItemsList != null) {
+            for (Map<String, Object> itemMap : cartItemsList) {
+                String name = (String) itemMap.get("productName");
+                if (name != null && name.length() > 30) name = name.substring(0, 27) + "...";
+
+                Object priceObj = itemMap.get("price");
+                Double price = (priceObj instanceof Long) ? ((Long) priceObj).doubleValue()
+                        : (Double) priceObj;
+
+                Object qtyObj = itemMap.get("quantity");
+                Integer qty = (qtyObj instanceof Long) ? ((Long) qtyObj).intValue()
+                        : (Integer) qtyObj;
+
+                canvas.drawText(name != null ? name : "Unknown Item", 20, yPosition, paint);
+                canvas.drawText(String.valueOf(qty), 265, yPosition, paint);
+                canvas.drawText(String.format("Rs.%,.2f", price), 310, yPosition, paint);
+                yPosition += 25;
+            }
+        }
+        canvas.drawLine(20, yPosition + 10, 380, yPosition + 10, paint);
+
+        paint.setTextSize(12);
+        paint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT,
+                android.graphics.Typeface.NORMAL));
+        canvas.drawText("Delivery Fee", 20, yPosition + 30, paint);
+        canvas.drawText("Rs.500.00", 310, yPosition + 30, paint);
+
+        canvas.drawLine(20, yPosition + 45, 380, yPosition + 45, paint);
+
+        paint.setTextSize(14);
+        paint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT,
+                android.graphics.Typeface.BOLD));
+        canvas.drawText("Total Paid: Rs. " + String.format("%,.2f", amount), 180,
+                yPosition + 70, paint);
+
+        paint.setTextSize(12);
+        paint.setTypeface(android.graphics.Typeface.create(android.graphics.Typeface.DEFAULT,
+                android.graphics.Typeface.ITALIC));
+        canvas.drawText("Thank you for shopping with LapMart!", 90, yPosition + 110, paint);
+        pdfDocument.finishPage(page);
+
+        try {
+            java.io.OutputStream fos;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                android.content.ContentValues values = new android.content.ContentValues();
+                values.put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+                values.put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+                values.put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH,
+                        android.os.Environment.DIRECTORY_DOWNLOADS + "/LapMart");
+
+                android.net.Uri uri = requireContext().getContentResolver().insert(
+                        android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                fos = requireContext().getContentResolver().openOutputStream(uri);
+            } else {
+                java.io.File dir = requireContext().getExternalFilesDir(
+                        android.os.Environment.DIRECTORY_DOWNLOADS);
+                java.io.File file = new java.io.File(dir, fileName);
+                fos = new java.io.FileOutputStream(file);
+            }
+
+            pdfDocument.writeTo(fos);
+            pdfDocument.close();
+            if (fos != null) fos.close();
+
+            requireActivity().runOnUiThread(() ->
+                    es.dmoral.toasty.Toasty.info(requireContext(),
+                            "Invoice PDF saved to Downloads folder!",
+                            android.widget.Toast.LENGTH_LONG).show()
+            );
+            Log.d("FileStorage", "PDF Invoice saved to Downloads: " + fileName);
+        } catch (Exception e) {
+            Log.e("FileStorage", "Failed to save PDF invoice", e);
+        }
     }
 
     private String generateOrderId() {

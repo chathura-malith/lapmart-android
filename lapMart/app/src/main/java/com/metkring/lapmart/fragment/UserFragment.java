@@ -14,14 +14,18 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -34,6 +38,7 @@ import com.metkring.lapmart.adapter.ProductAdapter;
 import com.metkring.lapmart.databinding.FragmentUserBinding;
 import com.metkring.lapmart.helper.CartManager;
 import com.metkring.lapmart.model.Product;
+import com.yalantis.ucrop.UCrop;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,10 +60,45 @@ public class UserFragment extends Fragment {
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    imageUri = result.getData().getData();
-                    if (imageUri != null) {
+                    Uri selectedUri = result.getData().getData();
+                    if (selectedUri != null) {
+                        startCrop(selectedUri);
+                    }
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    android.graphics.Bitmap photo = (android.graphics.Bitmap)
+                            result.getData().getExtras().get("data");
+                    String path = MediaStore.Images.Media.insertImage(
+                            requireContext().getContentResolver(), photo,
+                            "TempPic", null
+                    );
+                    Uri cameraUri = Uri.parse(path);
+                    if (cameraUri != null) {
+                        startCrop(cameraUri);
+                    }
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<Intent> cropLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    Uri resultUri = com.yalantis.ucrop.UCrop.getOutput(result.getData());
+                    if (resultUri != null) {
+                        imageUri = resultUri;
+                        binding.profileImage.setImageURI(imageUri);
                         uploadImageToFirebase();
                     }
+                } else if (result.getResultCode() == com.yalantis.ucrop.UCrop.RESULT_ERROR) {
+                    Throwable cropError = com.yalantis.ucrop.UCrop.getError(result.getData());
+                    Log.e("CropError", "Error cropping image", cropError);
                 }
             }
     );
@@ -84,11 +124,54 @@ public class UserFragment extends Fragment {
         loadProduct(view);
         binding.btnGoToLogin.setOnClickListener(v -> loadFragment(new SignInFragment()));
         binding.btnLogOutIcon.setOnClickListener(v -> logoutUser());
+
         binding.profileImage.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setType("image/*");
-            imagePickerLauncher.launch(intent);
+            BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+
+            LinearLayout layout = new LinearLayout(requireContext());
+            layout.setOrientation(LinearLayout.VERTICAL);
+            layout.setPadding(50, 50, 50, 50);
+
+            TextView title = new TextView(requireContext());
+            title.setText("Choose Profile Picture");
+            title.setTextSize(18);
+            title.setTypeface(null, android.graphics.Typeface.BOLD);
+            title.setPadding(0, 0, 0, 40);
+            layout.addView(title);
+
+            TextView cameraOption = new TextView(requireContext());
+            cameraOption.setText("📷  Take Photo with Camera");
+            cameraOption.setTextSize(16);
+            cameraOption.setPadding(0, 30, 0, 30);
+            cameraOption.setOnClickListener(vi -> {
+                bottomSheetDialog.dismiss();
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                cameraLauncher.launch(cameraIntent);
+            });
+            layout.addView(cameraOption);
+
+            View divider = new View(requireContext());
+            divider.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 2));
+            divider.setBackgroundColor(android.graphics.Color.LTGRAY);
+            layout.addView(divider);
+
+          TextView galleryOption = new TextView(requireContext());
+            galleryOption.setText("🖼️  Choose from Gallery");
+            galleryOption.setTextSize(16);
+            galleryOption.setPadding(0, 30, 0, 30);
+            galleryOption.setOnClickListener(vi -> {
+                bottomSheetDialog.dismiss();
+                Intent galleryIntent = new Intent(Intent.ACTION_PICK);
+                galleryIntent.setType("image/*");
+                imagePickerLauncher.launch(galleryIntent);
+            });
+            layout.addView(galleryOption);
+
+            bottomSheetDialog.setContentView(layout);
+            bottomSheetDialog.show();
         });
+
         binding.btnAddress.setOnClickListener(v-> loadFragment(new AddAddressFragment()));
         binding.btnOrders.setOnClickListener(v-> loadFragment(new OrderFragment()));
     }
@@ -243,5 +326,19 @@ public class UserFragment extends Fragment {
                 bottomNav.setVisibility(View.VISIBLE);
             }
         }
+    }
+
+    private void startCrop(Uri sourceUri) {
+        String destinationFileName = "CROPPED_" + System.currentTimeMillis() + ".jpg";
+        Uri destinationUri = Uri.fromFile(
+                new java.io.File(requireContext().getCacheDir(), destinationFileName)
+        );
+
+        Intent intent = UCrop.of(sourceUri, destinationUri)
+                .withAspectRatio(1, 1)
+                .withMaxResultSize(500, 500)
+                .getIntent(requireContext());
+
+        cropLauncher.launch(intent);
     }
 }

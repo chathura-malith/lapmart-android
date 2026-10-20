@@ -1,5 +1,7 @@
 package com.metkring.lapmart.fragment;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -40,7 +42,6 @@ public class SignInFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         binding = FragmentSignInBinding.inflate(inflater, container, false);
         mAuth = FirebaseAuth.getInstance();
         cartManager = new CartManager(requireContext());
@@ -78,6 +79,10 @@ public class SignInFragment extends Fragment {
                 .addOnCompleteListener(requireActivity(), task -> {
                     setLoading(false);
                     if (task.isSuccessful()) {
+                       SharedPreferences sharedPreferences = requireActivity()
+                               .getSharedPreferences("LapMartUserPrefs", Context.MODE_PRIVATE);
+                        sharedPreferences.edit().putString("last_logged_email", email).
+                                putLong("last_login_time", System.currentTimeMillis()).apply();
                         cartManager.syncLocalCartToFirebase();
                         Toasty.success(requireContext(), "Login Successful!").show();
                         navigateToHome();
